@@ -1,4 +1,6 @@
 From mathcomp Require Import all_ssreflect all_algebra.
+Require Import Coq.Lists.List.
+Import ListNotations.
 
 (* Prove that 3 is prime. *)
 Lemma prime3 : prime 3.
@@ -34,3 +36,34 @@ elim: n => [|n IH].
     simpl.
     exact is_true_true.
 Qed.
+
+Variant MIU :=
+  | M
+  | I
+  | U.
+
+Variant Move :=
+  | R1
+  | R2
+  | R3
+  | R4.
+
+Definition apply : Move -> list MIU -> list MIU := fun m x => match m with
+  (* Rule 1: Add a U to the end of any string ending in I *)
+  | R1 => [] (* TO DO: Replace this with actual implementation of rule *)
+
+  (* Rule 2: Double the string after the M *)
+  | R2 => [] (* TO DO: Replace this with actual implementation of rule *)
+
+  (* Rule 3: Replace any III with a U *)
+  | R3 => [] (* TO DO: Replace this with actual implementation of rule *)
+
+  (* Rule 4: Remove any UU *)
+  | R4 => [] (* TO DO: Replace this with actual implementation of rule *)
+end.
+
+Theorem no_solution_exists : ~exists (ms : list Move), fold_right apply [M; I] ms = [M; U].
+Proof.
+  intro.
+  admit.
+Admitted.
