@@ -78,19 +78,19 @@ Fixpoint rule_4 (l : list MIU) : list MIU :=
 Definition apply : Move -> list MIU -> list MIU := fun m xs => match xs with
   | nil => []
   | x :: xs' => match m with
-      (* Rule 1: Add a U to the end of any string ending in I *)
+      (* Rule 1: Add a U to the end of any string ending in I (if it exists) *)
       | R1 => match last (x :: xs') M with
           | I => x :: xs' ++ [U]
           | _ => x :: xs'
       end
 
-      (* Rule 2: Double the string after the M *)
+      (* Rule 2: Double the string after the first M (if it exists) *)
       | R2 => rule_2 (x :: xs')
 
-      (* Rule 3: Replace any III with a U *)
+      (* Rule 3: Replace the first III with a U (if it exists) *)
       | R3 => rule_3 (x :: xs')
 
-      (* Rule 4: Remove any UU *)
+      (* Rule 4: Remove the first UU (if it exists) *)
       | R4 => rule_4 (x :: xs')
     end
 end.
