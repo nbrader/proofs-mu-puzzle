@@ -124,7 +124,8 @@ Theorem rule_1_preserves_i_count : forall (l : list MIU), i_count (apply R1 l) =
 Proof.
   intros l.
   destruct l as [|a l'].
-  - reflexivity.
+  - simpl.
+    reflexivity.
   - unfold apply.
     destruct (last (a :: l') M) eqn:Hl.
     + (* last symbol is M *)
