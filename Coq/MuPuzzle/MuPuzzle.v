@@ -111,8 +111,12 @@ Fixpoint i_count (l : list MIU) : nat :=
 (* A simple auxiliary lemma: appending [U] does not change the I-count *)
 Lemma i_count_app_U: forall l, i_count (l ++ [U]) = i_count l.
 Proof.
-  induction l; simpl; auto.
-  rewrite IHl; reflexivity.
+  induction l.
+  - simpl.
+    reflexivity.
+  - simpl.
+    rewrite IHl.
+    reflexivity.
 Qed.
 
 (* Rule R1 simply adds a U at the end when the last symbol is I, so it preserves i_count. *)
@@ -203,7 +207,7 @@ Proof.
   - simpl.
     apply move_preserves_invariant.
     apply IHms.
-Admitted.
+Qed.
 
 (******************************************************************************)
 (* Final theorem: No solution exists *)
