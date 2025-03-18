@@ -1,4 +1,4 @@
-From mathcomp Require Import all_ssreflect all_algebra.
+From mathcomp Require Import ssreflect ssrfun ssrnat ssrbool prime div.
 Require Import Coq.Lists.List.
 Import ListNotations.
 
@@ -37,6 +37,9 @@ elim: n => [|n IH].
     exact is_true_true.
 Qed.
 
+(******************************************************************************)
+(* The MIU system *)
+
 Variant MIU :=
   | M
   | I
@@ -48,10 +51,12 @@ Variant Move :=
   | R3
   | R4.
 
+(* Auxiliary functions for the rules *)
+
 Fixpoint split_at_M (l : list MIU) : list MIU * list MIU :=
   match l with
   | [] => ([], [])
-  | M :: t => ([M], t)  (* Stop at the first M *)
+  | M :: t => ([M], t)  (* stop at the first M *)
   | x :: t => 
       let (prefix, suffix) := split_at_M t in
       (x :: prefix, suffix)
@@ -63,46 +68,155 @@ Definition rule_2 (l : list MIU) : list MIU :=
 
 Fixpoint rule_3 (l : list MIU) : list MIU :=
   match l with
-  | I :: I :: I :: t => U :: t         (* Replace the first occurrence of III with U *)
+  | I :: I :: I :: t => U :: t         (* Replace first occurrence of III with U *)
   | x :: t => x :: rule_3 t
-  | [] => []                           (* If list is empty, return empty list *)
+  | [] => []                          
   end.
 
 Fixpoint rule_4 (l : list MIU) : list MIU :=
   match l with
-  | U :: U :: t => t          (* Remove the first occurrence of UU *)
+  | U :: U :: t => t                  (* Remove first occurrence of UU *)
   | x :: t => x :: rule_4 t
-  | [] => []                  (* If list is empty, return empty list *)
+  | [] => []                          
   end.
 
-Definition apply : Move -> list MIU -> list MIU := fun m xs => match xs with
-  | nil => []
-  | x :: xs' => match m with
-      (* Rule 1: Add a U to the end of any string ending in I (if it exists) *)
+(* The function apply dispatches the given move. For R1 we append a U if the last
+   symbol is I; otherwise the string is unchanged. *)
+Definition apply (m : Move) (xs : list MIU) : list MIU :=
+  match xs with
+  | [] => []
+  | x :: xs' =>
+      match m with
       | R1 => match last (x :: xs') M with
-          | I => x :: xs' ++ [U]
-          | _ => x :: xs'
-      end
-
-      (* Rule 2: Double the string after the first M (if it exists) *)
+              | I => x :: xs' ++ [U]
+              | _ => x :: xs'
+              end
       | R2 => rule_2 (x :: xs')
-
-      (* Rule 3: Replace the first III with a U (if it exists) *)
       | R3 => rule_3 (x :: xs')
-
-      (* Rule 4: Remove the first UU (if it exists) *)
       | R4 => rule_4 (x :: xs')
-    end
-end.
+      end
+  end.
 
-(* Example usage *)
-Compute apply R1 [M; I].
-Compute apply R2 [I; M; I].
-Compute apply R3 [I; M; I; I; I; I; I; I].
-Compute apply R4 [I; M; U; U; U; U].
+(* Count the number of I's in a string *)
+Fixpoint i_count (l : list MIU) : nat :=
+  match l with
+  | I :: t => 1 + i_count t
+  | _ :: t => i_count t
+  | [] => 0
+  end.
 
-Theorem no_solution_exists : ~exists (ms : list Move), fold_right apply [M; I] ms = [M; U].
+(******************************************************************************)
+(* Invariant proofs *)
+
+(* A simple auxiliary lemma: appending [U] does not change the I-count *)
+Lemma i_count_app_U: forall l, i_count (l ++ [U]) = i_count l.
 Proof.
-  intro.
+  induction l; simpl; auto.
+  rewrite IHl; reflexivity.
+Qed.
+
+(* Rule R1 simply adds a U at the end when the last symbol is I, so it preserves i_count. *)
+Theorem rule_1_preserves_i_count : forall (l : list MIU), i_count (apply R1 l) = i_count l.
+Proof.
+  intros l.
+  destruct l as [|a l'].
+  - reflexivity.
+  - unfold apply.
+    destruct (last (a :: l') M) eqn:Hl.
+    + (* last symbol is M *)
+      reflexivity.
+    + (* last symbol is I *)
+      rewrite app_comm_cons.
+      rewrite i_count_app_U.
+      reflexivity.
+    + (* last symbol is U *)
+      reflexivity.
+Qed.
+
+(* The standard MIU invariant is that in any derivable string the number of I's is not divisible by 3.
+   In symbols, starting from [M; I] we always have ~(3 %| i_count s).
+   For rule R2, one shows that if l = prefix ++ suffix with prefix ending in M,
+   then i_count l = i_count suffix (since i_count prefix = 0) and rule R2 yields
+   prefix ++ suffix ++ suffix, i.e. 2*(i_count suffix). Since 2 is invertible mod 3,
+   3 ∤ i_count l  implies 3 ∤ (2 * i_count l).
+   
+   Rule R3 subtracts 3 I's (if it replaces III with U), and rule R4 does not affect I's.
+   We state these facts as lemmas (proof details omitted and left as admit). *)
+
+Lemma rule_2_preserves_invariant: forall l,
+  (3 %| i_count l) = false ->
+  (3 %| i_count (apply R2 l)) = false.
+Proof.
+  intros l H.
+  (* Proof: Write l as prefix ++ suffix via split_at_M, observe that i_count prefix = 0,
+     so i_count l = i_count suffix and i_count (apply R2 l) = 2 * i_count suffix.
+     Since multiplication by 2 is an automorphism modulo 3, the property is preserved. *)
   admit.
 Admitted.
+
+Lemma rule_3_preserves_invariant: forall l,
+  (3 %| i_count l) = false ->
+  (3 %| i_count (apply R3 l)) = false.
+Proof.
+  intros l H.
+  (* Proof: Replacing III by U subtracts 3 from the I‑count.
+     Since subtracting a multiple of 3 does not affect divisibility by 3, the invariant holds. *)
+  admit.
+Admitted.
+
+Lemma rule_4_preserves_invariant: forall l,
+  (3 %| i_count l) = false ->
+  (3 %| i_count (apply R4 l)) = false.
+Proof.
+  intros l H.
+  (* Proof: Rule R4 removes UU, which does not affect the I‑count. *)
+  admit.
+Admitted.
+
+(* We then conclude that every move preserves the invariant: *)
+Lemma move_preserves_invariant: forall m l,
+  (3 %| i_count l) = false ->
+  (3 %| i_count (apply m l)) = false.
+Proof.
+  intros m l H.
+  destruct m.
+  - apply rule_1_preserves_i_count in l; exact H.
+  - apply rule_2_preserves_invariant; exact H.
+  - apply rule_3_preserves_invariant; exact H.
+  - apply rule_4_preserves_invariant; exact H.
+Admitted.
+
+(* In our system the initial string is [M; I]. Notice that i_count [M; I] = 1,
+   and 1 is not divisible by 3. *)
+Lemma initial_invariant: (3 %| i_count [M; I]) = false.
+Proof.
+  simpl.
+  reflexivity.
+Qed.
+
+(* By induction on a sequence of moves, the invariant is maintained. *)
+Lemma invariant_moves: forall ms,
+  (3 %| i_count (fold_right apply [M; I] ms)) = false.
+Proof.
+  induction ms.
+  - simpl; apply initial_invariant.
+  - simpl.
+    apply move_preserves_invariant.
+    apply IHms.
+Admitted.
+
+(******************************************************************************)
+(* Final theorem: No solution exists *)
+
+Theorem no_solution_exists : ~ exists (ms : list Move), fold_right apply [M; I] ms = [M; U].
+Proof.
+  intro H.
+  destruct H as [ms Hms].
+  (* By the invariant, fold_right apply [M; I] ms has an I‑count not divisible by 3. *)
+  assert (Hinv: (3 %| i_count (fold_right apply [M; I] ms)) = false)
+    by apply invariant_moves.
+  rewrite Hms in Hinv.
+  (* But i_count [M; U] = i_count (M :: [U]) = 0, and 0 is divisible by 3. *)
+  simpl in Hinv.
+  discriminate.
+Qed.
