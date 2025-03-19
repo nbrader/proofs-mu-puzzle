@@ -42,10 +42,10 @@ Qed.
 
 Variant MIU :=
   (* It's trivial to see M is preserved by all rules and it complicates the rules
-    try to account for an M not at the start.
+    trying to account for an M not at the start.
 
     For this reason, I'm leaving the M implied as being at the start of all MIU lists.
-      *)
+  *)
   | I
   | U.
 
