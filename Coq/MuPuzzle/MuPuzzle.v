@@ -41,7 +41,11 @@ Qed.
 (* The MIU system *)
 
 Variant MIU :=
-  | M
+  (* It's trivial to see M is preserved by all rules and it complicates the rules
+    try to account for an M not at the start.
+
+    For this reason, I'm leaving the M implied as being at the start of all MIU lists.
+      *)
   | I
   | U.
 
@@ -53,18 +57,14 @@ Variant Move :=
 
 (* Auxiliary functions for the rules *)
 
-Fixpoint split_at_M (l : list MIU) : list MIU * list MIU :=
-  match l with
-  | [] => ([], [])
-  | M :: t => ([M], t)  (* stop at the first M *)
-  | x :: t => 
-      let (prefix, suffix) := split_at_M t in
-      (x :: prefix, suffix)
+Definition rule_1 (l : list MIU) : list MIU :=
+  match last l U with
+  | I => l ++ [U]
+  | _ => l
   end.
 
 Definition rule_2 (l : list MIU) : list MIU :=
-  let (prefix, suffix) := split_at_M l in
-  prefix ++ suffix ++ suffix.
+  l ++ l.
 
 Fixpoint rule_3 (l : list MIU) : list MIU :=
   match l with
@@ -82,18 +82,15 @@ Fixpoint rule_4 (l : list MIU) : list MIU :=
 
 (* The function apply dispatches the given move. For R1 we append a U if the last
    symbol is I; otherwise the string is unchanged. *)
-Definition apply (m : Move) (xs : list MIU) : list MIU :=
-  match xs with
+Definition apply (m : Move) (l : list MIU) : list MIU :=
+  match l with
   | [] => []
-  | x :: xs' =>
+  | _ :: _ =>
       match m with
-      | R1 => match last (x :: xs') M with
-              | I => x :: xs' ++ [U]
-              | _ => x :: xs'
-              end
-      | R2 => rule_2 (x :: xs')
-      | R3 => rule_3 (x :: xs')
-      | R4 => rule_4 (x :: xs')
+      | R1 => rule_1 l
+      | R2 => rule_2 l
+      | R3 => rule_3 l
+      | R4 => rule_4 l
       end
   end.
 
@@ -127,11 +124,9 @@ Proof.
   - simpl.
     reflexivity.
   - unfold apply.
-    destruct (last (a :: l') M) eqn:Hl.
-    + (* last symbol is M *)
-      reflexivity.
+    unfold rule_1.
+    destruct (last (a :: l') U) eqn:Hl.
     + (* last symbol is I *)
-      rewrite app_comm_cons.
       rewrite i_count_app_U.
       reflexivity.
     + (* last symbol is U *)
@@ -193,7 +188,7 @@ Admitted.
 
 (* In our system the initial string is [M; I]. Notice that i_count [M; I] = 1,
    and 1 is not divisible by 3. *)
-Lemma initial_invariant: (3 %| i_count [M; I]) = false.
+Lemma initial_invariant: (3 %| i_count [I]) = false.
 Proof.
   simpl.
   reflexivity.
@@ -201,7 +196,7 @@ Qed.
 
 (* By induction on a sequence of moves, the invariant is maintained. *)
 Lemma invariant_moves: forall ms,
-  (3 %| i_count (fold_right apply [M; I] ms)) = false.
+  (3 %| i_count (fold_right apply [I] ms)) = false.
 Proof.
   induction ms.
   - simpl; apply initial_invariant.
@@ -213,12 +208,12 @@ Qed.
 (******************************************************************************)
 (* Final theorem: No solution exists *)
 
-Theorem no_solution_exists : ~ exists (ms : list Move), fold_right apply [M; I] ms = [M; U].
+Theorem no_solution_exists : ~ exists (ms : list Move), fold_right apply [I] ms = [U].
 Proof.
   intro H.
   destruct H as [ms Hms].
   (* By the invariant, fold_right apply [M; I] ms has an I‑count not divisible by 3. *)
-  assert (Hinv: (3 %| i_count (fold_right apply [M; I] ms)) = false)
+  assert (Hinv: (3 %| i_count (fold_right apply [I] ms)) = false)
     by apply invariant_moves.
   rewrite Hms in Hinv.
   (* But i_count [M; U] = i_count (M :: [U]) = 0, and 0 is divisible by 3. *)
