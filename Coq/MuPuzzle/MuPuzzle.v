@@ -180,11 +180,11 @@ Lemma move_preserves_invariant: forall m l,
 Proof.
   intros m l H.
   destruct m.
-  - apply rule_1_preserves_i_count in l; exact H.
+  - rewrite rule_1_preserves_i_count; exact H.
   - apply rule_2_preserves_invariant; exact H.
   - apply rule_3_preserves_invariant; exact H.
   - apply rule_4_preserves_invariant; exact H.
-Admitted.
+Qed.
 
 (* In our system the initial string is [M; I]. Notice that i_count [M; I] = 1,
    and 1 is not divisible by 3. *)
