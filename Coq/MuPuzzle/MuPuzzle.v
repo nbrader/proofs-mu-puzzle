@@ -143,16 +143,20 @@ Qed.
    Rule R3 subtracts 3 I's (if it replaces III with U), and rule R4 does not affect I's.
    We state these facts as lemmas (proof details omitted and left as admit). *)
 
+Lemma rule_2_doubles_i_count: forall l, i_count (apply R2 l) = 2 * i_count l.
+Proof.
+  admit.
+Admitted.
+
 Lemma rule_2_preserves_invariant: forall l,
   (3 %| i_count l) = false ->
   (3 %| i_count (apply R2 l)) = false.
 Proof.
   intros l H.
-  (* Proof: Write l as prefix ++ suffix via split_at_M, observe that i_count prefix = 0,
-     so i_count l = i_count suffix and i_count (apply R2 l) = 2 * i_count suffix.
-     Since multiplication by 2 is an automorphism modulo 3, the property is preserved. *)
-  admit.
-Admitted.
+  rewrite rule_2_doubles_i_count.
+  rewrite (@Euclid_dvdM 2 (i_count l) 3 prime3).
+  apply H.
+Qed.
 
 Lemma rule_3_preserves_invariant: forall l,
   (3 %| i_count l) = false ->
