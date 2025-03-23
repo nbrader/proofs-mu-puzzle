@@ -7,6 +7,8 @@ Require Import Coq.micromega.Lia.
 
 Open Scope nat_scope.
 
+Require Import FreeMonoid.MonoidConcat.
+
 (******************************************************************************)
 (* The MIU system *)
 
