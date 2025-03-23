@@ -1,3 +1,31 @@
 -docroot MyProject
 -R MuPuzzle MuPuzzle
+-R CoqUtilLib CoqUtilLib
+-R FreeMonoid FreeMonoid
+CoqUtilLib/FunctionLemmas.v
+CoqUtilLib/Iteration.v
+CoqUtilLib/ListFunctions.v
+CoqUtilLib/OptionFunctions.v
+FreeMonoid/Category.v
+FreeMonoid/ExtraLemmas.v
+FreeMonoid/HomExampleBoolOrToNatMax1.v
+FreeMonoid/MonoidConcat.v
+FreeMonoid/MonoidExampleAddAbsorbing.v
+FreeMonoid/MonoidExampleAddNeutral.v
+FreeMonoid/MonoidExampleBoolOr.v
+FreeMonoid/MonoidExampleEndo.v
+FreeMonoid/MonoidExampleFirst.v
+FreeMonoid/MonoidExampleLast.v
+FreeMonoid/MonoidExampleNatMax1.v
+FreeMonoid/MonoidExampleRealsPlus.v
+FreeMonoid/MonoidExampleRealsMult.v
+FreeMonoid/MonoidExampleExtendToFunction.v
+FreeMonoid/MonoidExampleRealsPlusFunction.v
+FreeMonoid/MonoidFree.v
+FreeMonoid/MonoidFreeTest.v
+FreeMonoid/MonoidHom.v
+FreeMonoid/StructMagma.v
+FreeMonoid/StructMonoid.v
+FreeMonoid/StructSemigroup.v
+FreeMonoid/TypeCategory.v
 MuPuzzle/MuPuzzle.v

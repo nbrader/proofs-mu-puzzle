@@ -1,41 +1,11 @@
-From mathcomp Require Import ssreflect ssrfun ssrnat ssrbool prime div.
+Require Import Coq.Init.Peano.
+Require Import Coq.Arith.PeanoNat.
+Require Import Coq.Arith.Le.
 Require Import Coq.Lists.List.
 Import ListNotations.
+Require Import Coq.micromega.Lia.
 
-(* Prove that 3 is prime. *)
-Lemma prime3 : prime 3.
-Proof.
-rewrite /prime.
-split.
-Qed.
-
-(* Main lemma: 3 does not divide 2^n. *)
-Lemma pow2_not_div_by_3 (n : nat) : ~~ (3 %| 2^n).
-Proof.
-elim: n => [|n IH].
-- (* Base case: 2^0 = 1, so 3 does not divide 1 *)
-  by rewrite expn0 dvdn1.
-- (* Inductive step: 2^(n+1) = 2 * 2^n *)
-  rewrite expnS.
-  (* Case analysis on whether 3 divides 2 * 2^n *)
-  case_eq (3 %| (2 * 2^n)).
-  + (* If 3 divides 2 * 2^n, then by prime_dvd_mul, 3 divides 2 or 3 divides 2^n *)
-    intros.
-    assert ((3 %| 2 * 2 ^ n) = (3 %| 2) || (3 %| 2 ^ n)) by (apply (@Euclid_dvdM 2 (2^n) 3 prime3)).
-    rewrite H in H0. clear H.
-    rewrite H0. clear H0.
-    rewrite negb_or.
-    case_eq (3 %| 2 ^ n).
-    intros.
-    rewrite H in IH.
-    apply IH.
-    intros.
-    simpl.
-    exact is_true_true.
-    intros.
-    simpl.
-    exact is_true_true.
-Qed.
+Open Scope nat_scope.
 
 (******************************************************************************)
 (* The MIU system *)
@@ -116,6 +86,30 @@ Proof.
     reflexivity.
 Qed.
 
+(* A simple auxiliary lemma: consing I increments I-count *)
+Lemma i_count_cons_I: forall l, i_count (I :: l) = 1 + i_count l.
+Proof.
+  induction l.
+  - simpl.
+    reflexivity.
+  - simpl.
+    admit.
+    (* rewrite IHl.
+    reflexivity. *)
+Admitted.
+
+(* A simple auxiliary lemma: consing I increments I-count *)
+Lemma i_count_cons_I_equivalent_to_app_I: forall l, i_count (I :: l) = i_count (l ++ [I]).
+Proof.
+  induction l.
+  - simpl.
+    reflexivity.
+  - simpl.
+    admit.
+    (* rewrite IHl.
+    reflexivity. *)
+Admitted.
+
 (* Rule R1 simply adds a U at the end when the last symbol is I, so it preserves i_count. *)
 Theorem rule_1_preserves_i_count : forall (l : list MIU), i_count (apply R1 l) = i_count l.
 Proof.
@@ -148,51 +142,106 @@ Proof.
   admit.
 Admitted.
 
-Lemma rule_2_preserves_invariant: forall l,
-  (3 %| i_count l) = false ->
-  (3 %| i_count (apply R2 l)) = false.
+Lemma rule_3_subtracts_3_from_i_count_if_large: forall l, 3 <= i_count l -> i_count (apply R3 l) = i_count l - 3.
 Proof.
-  intros l H.
+  admit.
+Admitted.
+
+Lemma rule_3_does_nothing_to_i_count_if_small: forall l, i_count l <= 3 -> i_count (apply R3 l) = i_count l.
+Proof.
+  admit.
+Admitted.
+
+Lemma rule_2_preserves_invariant: forall l, ((i_count l mod 3) =? 0) = ((i_count (apply R2 l) mod 3) =? 0).
+Proof.
+  intros.
   rewrite rule_2_doubles_i_count.
-  rewrite (@Euclid_dvdM 2 (i_count l) 3 prime3).
-  apply H.
-Qed.
+  rewrite <- Nat.Div0.mul_mod_idemp_l.
+  replace (2 mod 3) with 2 by reflexivity.
+  replace (i_count l mod 3 =? 0) with ((2 * i_count l) mod 3 =? 0).
+  - reflexivity.
+  - induction l.
+    + reflexivity.
+    + case a.
+      (* * simp *)
+      admit.
+Admitted.
 
 Lemma rule_3_preserves_invariant: forall l,
-  (3 %| i_count l) = false ->
-  (3 %| i_count (apply R3 l)) = false.
+  ((i_count l) mod 3 =? 0) =
+  ((i_count (apply R3 l)) mod 3 =? 0).
 Proof.
-  intros l H.
+  (* intros l.
   (* Proof: Replacing III by U subtracts 3 from the I‑count.
      Since subtracting a multiple of 3 does not affect divisibility by 3, the invariant holds. *)
+  
+  assert (3 <> i_count l).
+  {
+    intro.
+    rewrite H0 in H. clear H0.
+    assert (i_count l %| i_count l = true) by apply (dvdnn (i_count l)).
+    rewrite H0 in H. clear H0.
+    discriminate.
+  }
+  
+  pose proof (le_total 3 (i_count l)).
+  
+  rewrite rule_3_subtracts_3_from_i_count_if_possible.
+  rewrite dvdn_subl.
+  apply H.
+
+  assert (3 = i_count l -> ~(3 = i_count l) -> False).
+  {
+    intros H_eq H_neq.
+    unfold not in H_neq.
+    apply H_neq in H_eq.
+    exact H_eq.
+  }
+
+  destruct H0.
+
+  apply Nat.le_antisymm in H0.
+
+  Search (_ %| _).
+  case_eq l.
+  - intros.
+    rewrite H0 in H.
+    simpl in H.
+    simpl.
+    apply H.
+  - intros.
+    rewrite H0 in H.
+    simpl in H.
+    simpl. *)
+
   admit.
 Admitted.
 
 Lemma rule_4_preserves_invariant: forall l,
-  (3 %| i_count l) = false ->
-  (3 %| i_count (apply R4 l)) = false.
+  ((i_count l) mod 3 =? 0) =
+  ((i_count (apply R4 l)) mod 3 =? 0).
 Proof.
-  intros l H.
+  intros l.
   (* Proof: Rule R4 removes UU, which does not affect the I‑count. *)
   admit.
 Admitted.
 
 (* We then conclude that every move preserves the invariant: *)
 Lemma move_preserves_invariant: forall m l,
-  (3 %| i_count l) = false ->
-  (3 %| i_count (apply m l)) = false.
+  ((i_count l) mod 3 =? 0) =
+  ((i_count (apply m l)) mod 3 =? 0).
 Proof.
-  intros m l H.
+  intros m l.
   destruct m.
-  - rewrite rule_1_preserves_i_count; exact H.
-  - apply rule_2_preserves_invariant; exact H.
-  - apply rule_3_preserves_invariant; exact H.
-  - apply rule_4_preserves_invariant; exact H.
+  - rewrite rule_1_preserves_i_count. reflexivity.
+  - rewrite rule_2_preserves_invariant. reflexivity.
+  - rewrite rule_3_preserves_invariant. reflexivity.
+  - rewrite rule_4_preserves_invariant. reflexivity.
 Qed.
 
 (* In our system the initial string is [M; I]. Notice that i_count [M; I] = 1,
    and 1 is not divisible by 3. *)
-Lemma initial_invariant: (3 %| i_count [I]) = false.
+Lemma initial_invariant: ((i_count [I]) mod 3 =? 0) = false.
 Proof.
   simpl.
   reflexivity.
@@ -200,14 +249,15 @@ Qed.
 
 (* By induction on a sequence of moves, the invariant is maintained. *)
 Lemma invariant_moves: forall ms,
-  (3 %| i_count (fold_right apply [I] ms)) = false.
+  ((i_count (fold_right apply [I] ms)) mod 3 =? 0) = false.
 Proof.
   induction ms.
   - simpl; apply initial_invariant.
   - simpl.
-    apply move_preserves_invariant.
-    apply IHms.
-Qed.
+    admit.
+    (* apply move_preserves_invariant.
+    apply IHms. *)
+Admitted.
 
 (******************************************************************************)
 (* Final theorem: No solution exists *)
@@ -217,8 +267,7 @@ Proof.
   intro H.
   destruct H as [ms Hms].
   (* By the invariant, fold_right apply [M; I] ms has an I‑count not divisible by 3. *)
-  assert (Hinv: (3 %| i_count (fold_right apply [I] ms)) = false)
-    by apply invariant_moves.
+  pose proof (invariant_moves ms) as Hinv.
   rewrite Hms in Hinv.
   (* But i_count [M; U] = i_count (M :: [U]) = 0, and 0 is divisible by 3. *)
   simpl in Hinv.
