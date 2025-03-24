@@ -1,15 +1,18 @@
 Require Import Coq.Init.Peano.
 Require Import Coq.Arith.PeanoNat.
 Require Import Coq.Arith.Le.
+Require Import ArithRing Ring.
+Require Import Coq.micromega.Lia.
+Require Import Coq.Arith.Plus.
 Require Import Coq.Lists.List.
 Import ListNotations.
-Require Import Coq.micromega.Lia.
 
 Open Scope nat_scope.
 
 Require Import CoqUtilLib.ListFunctions.
-Require Import CoqUtilLib.ListFunctions.
-Require Import FreeMonoid.MonoidConcat.
+Require Import FreeMonoid.StructMonoid.
+Require Import FreeMonoid.MonoidFree.
+Require Import FreeMonoid.StructMonoid.
 
 (******************************************************************************)
 (* The MIU system *)
@@ -72,6 +75,28 @@ Fixpoint i_count (l : list MIU) : nat :=
   | [] => 0
   end.
 
+(* Monoid Stuff *)
+Instance nat_Magma : Magma nat := {
+  m_op := plus
+}.
+
+Instance nat_Semigroup : Semigroup nat := {
+  sg_assoc := Nat.add_assoc
+}.
+
+Instance nat_Monoid : Monoid nat := {
+  mn_id := 0;
+  mn_left_id := Nat.add_0_l;
+  mn_right_id := Nat.add_0_r
+}.
+
+Module MIUBasis <: BasisType.
+  Definition Basis := MIU.
+End MIUBasis.
+
+Module MIUFreeMonoid := FreeMonoidModule MIUBasis.
+
+Compute MIUFreeMonoid.extend nat_Monoid (fun (x : MIU) => match x with U => 0 | I => 1 end) [I; I; I].
 
 
 Section FoldEquiv.
