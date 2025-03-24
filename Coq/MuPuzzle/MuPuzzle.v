@@ -96,7 +96,7 @@ End MIUBasis.
 
 Module MIUFreeMonoid := FreeMonoidModule MIUBasis.
 
-Compute MIUFreeMonoid.extend nat_Monoid (fun (x : MIU) => match x with U => 0 | I => 1 end) [I; I; I].
+Compute MIUFreeMonoid.extend nat_Monoid (fun (x : MIU) => match x with U => 0 | I => 1 end) [I; I; I; U; I].
 
 
 Section FoldEquiv.
