@@ -72,6 +72,40 @@ Fixpoint i_count (l : list MIU) : nat :=
   | [] => 0
   end.
 
+
+
+Section FoldEquiv.
+
+Require Import Coq.Program.Basics.
+Require Import Coq.Program.Combinators.
+
+(* Count the number of I's in a string *)
+Definition i_counter (x : MIU) :=
+  match x with
+  | I  => 1
+  | _  => 0
+  end.
+
+Definition i_count_from_fold (l : list MIU) : nat := ((fun xs => fold_left plus xs O) ∘ map i_counter) l.
+
+Require Import Coq.Logic.FunctionalExtensionality.
+
+Lemma i_count_fold_equiv : i_count = i_count_from_fold.
+Proof.
+  apply functional_extensionality.
+  intros.
+  case x.
+  - simpl.
+    reflexivity.
+  - intros.
+    unfold i_count_from_fold.
+    unfold compose.
+    simpl.
+    admit.
+Admitted.
+
+End FoldEquiv.
+
 (******************************************************************************)
 (* Invariant proofs *)
 
