@@ -7,6 +7,8 @@ Require Import Coq.micromega.Lia.
 
 Open Scope nat_scope.
 
+Require Import CoqUtilLib.ListFunctions.
+Require Import CoqUtilLib.ListFunctions.
 Require Import FreeMonoid.MonoidConcat.
 
 (******************************************************************************)
@@ -55,15 +57,11 @@ Fixpoint rule_4 (l : list MIU) : list MIU :=
 (* The function apply dispatches the given move. For R1 we append a U if the last
    symbol is I; otherwise the string is unchanged. *)
 Definition apply (m : Move) (l : list MIU) : list MIU :=
-  match l with
-  | [] => []
-  | _ :: _ =>
-      match m with
-      | R1 => rule_1 l
-      | R2 => rule_2 l
-      | R3 => rule_3 l
-      | R4 => rule_4 l
-      end
+  match m with
+  | R1 => rule_1 l
+  | R2 => rule_2 l
+  | R3 => rule_3 l
+  | R4 => rule_4 l
   end.
 
 (* Count the number of I's in a string *)
@@ -88,6 +86,76 @@ Proof.
     reflexivity.
 Qed.
 
+(* A simple auxiliary lemma: appending [U] does not change the I-count *)
+Lemma i_count_apps_U: forall l1 l2, i_count (l1 ++ [U] ++ l2) = i_count l1 + i_count l2.
+Proof.
+  induction l1, l2.
+  - reflexivity.
+  - reflexivity.
+  - intros.
+    simpl.
+    rewrite <- plus_n_O.
+    rewrite i_count_app_U.
+    reflexivity.
+  - admit.
+    (* rewrite <- plus_n_O.
+    rewrite i_count_app_U.
+    reflexivity. *)
+Admitted.
+
+Lemma i_count_app_I: forall l, i_count (l ++ [I]) = i_count l + 1.
+Proof.
+  induction l.
+  - simpl.
+    reflexivity.
+  - simpl.
+    rewrite IHl.
+    case a.
+    reflexivity.
+    reflexivity.
+Qed.
+
+(* A simple auxiliary lemma: consing I increments I-count *)
+Lemma i_count_app_comm: forall l1 l2, i_count (l1 ++ l2) = i_count (l2 ++ l1).
+Proof.
+  induction l1, l2.
+  - reflexivity.
+  - rewrite app_nil_r.
+    reflexivity.
+  - rewrite app_nil_r.
+    reflexivity.
+  - 
+    rewrite ListFunctions.cons_append.
+    rewrite <- app_assoc.
+    rewrite (ListFunctions.cons_append _ m l2).
+    rewrite <- app_assoc.
+    case a.
+    unfold i_count.
+
+    admit.
+Admitted.
+
+(* A simple auxiliary lemma: consing I increments I-count *)
+Lemma i_count_app_plus: forall l1 l2, i_count (l1 ++ l2) = i_count l1 + i_count l2.
+Proof.
+  induction l1, l2.
+  - reflexivity.
+  - reflexivity.
+  - simpl.
+    rewrite app_nil_r.
+    rewrite <- plus_n_O.
+    reflexivity.
+  - 
+    rewrite ListFunctions.cons_append.
+    rewrite <- app_assoc.
+    rewrite (ListFunctions.cons_append _ m l2).
+    rewrite <- app_comm_cons.
+    rewrite ListFunctions.cons_append.
+    admit.
+    (* rewrite IHl.
+    reflexivity. *)
+Admitted.
+
 (* A simple auxiliary lemma: consing I increments I-count *)
 Lemma i_count_cons_I: forall l, i_count (I :: l) = 1 + i_count l.
 Proof.
@@ -95,22 +163,20 @@ Proof.
   - simpl.
     reflexivity.
   - simpl.
-    admit.
-    (* rewrite IHl.
-    reflexivity. *)
-Admitted.
+    case a.
+    reflexivity.
+    reflexivity.
+Qed.
 
 (* A simple auxiliary lemma: consing I increments I-count *)
 Lemma i_count_cons_I_equivalent_to_app_I: forall l, i_count (I :: l) = i_count (l ++ [I]).
 Proof.
-  induction l.
-  - simpl.
-    reflexivity.
-  - simpl.
-    admit.
-    (* rewrite IHl.
-    reflexivity. *)
-Admitted.
+  intros.
+  rewrite i_count_app_I.
+  rewrite i_count_cons_I.
+  rewrite Nat.add_comm.
+  reflexivity.
+Qed.
 
 (* Rule R1 simply adds a U at the end when the last symbol is I, so it preserves i_count. *)
 Theorem rule_1_preserves_i_count : forall (l : list MIU), i_count (apply R1 l) = i_count l.
@@ -139,10 +205,26 @@ Qed.
    Rule R3 subtracts 3 I's (if it replaces III with U), and rule R4 does not affect I's.
    We state these facts as lemmas (proof details omitted and left as admit). *)
 
-Lemma rule_2_doubles_i_count: forall l, i_count (apply R2 l) = 2 * i_count l.
+Lemma rule_2_doubles_i_count: forall l, i_count (rule_2 l) = 2 * i_count l.
 Proof.
-  admit.
-Admitted.
+  intros.
+  unfold rule_2.
+  rewrite i_count_app_plus.
+  unfold mult.
+  rewrite <- plus_n_O.
+  reflexivity.
+Qed.
+
+Lemma apply_R2_doubles_i_count: forall l, i_count (apply R2 l) = 2 * i_count l.
+Proof.
+  intros.
+  case l.
+  - reflexivity.
+  - intros.
+    unfold apply.
+    rewrite <- rule_2_doubles_i_count.
+    reflexivity.
+Qed.
 
 Lemma rule_3_subtracts_3_from_i_count_if_large: forall l, 3 <= i_count l -> i_count (apply R3 l) = i_count l - 3.
 Proof.
