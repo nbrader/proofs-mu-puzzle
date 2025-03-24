@@ -12,6 +12,8 @@ Open Scope nat_scope.
 Require Import CoqUtilLib.ListFunctions.
 Require Import FreeMonoid.StructMonoid.
 Require Import FreeMonoid.MonoidFree.
+Require Import FreeMonoid.StructMagma.
+Require Import FreeMonoid.StructSemigroup.
 Require Import FreeMonoid.StructMonoid.
 
 (******************************************************************************)
@@ -67,14 +69,6 @@ Definition apply (m : Move) (l : list MIU) : list MIU :=
   | R4 => rule_4 l
   end.
 
-(* Count the number of I's in a string *)
-Fixpoint i_count (l : list MIU) : nat :=
-  match l with
-  | I :: t => 1 + i_count t
-  | _ :: t => i_count t
-  | [] => 0
-  end.
-
 (* Monoid Stuff *)
 Instance nat_Magma : Magma nat := {
   m_op := plus
@@ -99,6 +93,17 @@ Module MIUFreeMonoid := FreeMonoidModule MIUBasis.
 Compute MIUFreeMonoid.foldMap nat_Monoid (fun (x : MIU) => match x with U => 0 | I => 1 end) [I; I; I; U; I].
 
 
+(* Define a function to count I's *)
+Definition i_count (l : list MIU) : nat := 
+  MIUFreeMonoid.foldMap nat_Monoid (fun x => match x with I => 1 | U => 0 end) l.
+
+(* Count the number of I's in a string *)
+Fixpoint i_count2 (l : list MIU) : nat :=
+  match l with
+  | I :: t => 1 + i_count2 t
+  | _ :: t => i_count2 t
+  | [] => 0
+  end.
 Section FoldEquiv.
 
 Require Import Coq.Program.Basics.
@@ -135,7 +140,7 @@ End FoldEquiv.
 (* Invariant proofs *)
 
 (* A simple auxiliary lemma: appending [U] does not change the I-count *)
-Lemma i_count_app_U: forall l, i_count (l ++ [U]) = i_count l.
+Lemma i_count_app_U : forall l, i_count (l ++ [U]) = i_count l.
 Proof.
   induction l.
   - simpl.
@@ -146,7 +151,7 @@ Proof.
 Qed.
 
 (* A simple auxiliary lemma: appending [U] does not change the I-count *)
-Lemma i_count_apps_U: forall l1 l2, i_count (l1 ++ [U] ++ l2) = i_count l1 + i_count l2.
+Lemma i_count_apps_U : forall l1 l2, i_count (l1 ++ [U] ++ l2) = i_count l1 + i_count l2.
 Proof.
   induction l1, l2.
   - reflexivity.
@@ -162,7 +167,7 @@ Proof.
     reflexivity. *)
 Admitted.
 
-Lemma i_count_app_I: forall l, i_count (l ++ [I]) = i_count l + 1.
+Lemma i_count_app_I : forall l, i_count (l ++ [I]) = i_count l + 1.
 Proof.
   induction l.
   - simpl.
@@ -175,7 +180,7 @@ Proof.
 Qed.
 
 (* A simple auxiliary lemma: consing I increments I-count *)
-Lemma i_count_app_comm: forall l1 l2, i_count (l1 ++ l2) = i_count (l2 ++ l1).
+Lemma i_count_app_comm : forall l1 l2, i_count (l1 ++ l2) = i_count (l2 ++ l1).
 Proof.
   induction l1, l2.
   - reflexivity.
@@ -194,29 +199,43 @@ Proof.
     admit.
 Admitted.
 
-(* A simple auxiliary lemma: consing I increments I-count *)
-Lemma i_count_app_plus: forall l1 l2, i_count (l1 ++ l2) = i_count l1 + i_count l2.
+Instance list_MIU_Magma : Magma (list MIU) := MIUFreeMonoid.FreeMonoid_Magma.
+Instance list_MIU_Semigroup : Semigroup (list MIU) := MIUFreeMonoid.FreeMonoid_Semigroup.
+Instance list_MIU_Monoid : Monoid (list MIU) := MIUFreeMonoid.FreeMonoid_Monoid.
+
+Definition i_count_foldMap := (MIUFreeMonoid.foldMap nat_Monoid (fun x => match x with I => 1 | U => 0 end)).
+
+Compute i_count_foldMap [I].
+
+Require Import MonoidHom.
+
+(* Now prove the lemma using the universal property *)
+Lemma i_count_app_plus : forall l1 l2, i_count_foldMap (m_op l1 l2) = i_count_foldMap l1 + i_count_foldMap l2.
 Proof.
-  induction l1, l2.
-  - reflexivity.
-  - reflexivity.
-  - simpl.
-    rewrite app_nil_r.
-    rewrite <- plus_n_O.
-    reflexivity.
-  - 
-    rewrite ListFunctions.cons_append.
-    rewrite <- app_assoc.
-    rewrite (ListFunctions.cons_append _ m l2).
-    rewrite <- app_comm_cons.
-    rewrite ListFunctions.cons_append.
-    admit.
-    (* rewrite IHl.
-    reflexivity. *)
+  intros l1 l2.
+  fold (m_op (A:=list MIU)).
+  (* Use the monoid homomorphism property *)
+  pose proof (MIUFreeMonoid.foldMap_mor nat_Monoid (fun x => match x with I => 1 | U => 0 end)).
+  admit.
+  (* rewrite (@homo_preserves_op MIU nat _ _ _ _ _ nat_Monoid (fun x => match x with I => 1 | U => 0 end) H l1 l2).
+  reflexivity. *)
 Admitted.
 
 (* A simple auxiliary lemma: consing I increments I-count *)
-Lemma i_count_cons_I: forall l, i_count (I :: l) = 1 + i_count l.
+Lemma i_count_app_plus2 : forall l1 l2, i_count (l1 ++ l2) = i_count l1 + i_count l2.
+Proof.
+  intros l1 l2.
+  induction l1 as [| a l1' IHl1'].
+  - (* Base case: empty list *)
+    simpl. reflexivity.
+  - (* Inductive case *)
+    simpl. 
+    rewrite IHl1'.
+    admit.
+Admitted.
+
+(* A simple auxiliary lemma: consing I increments I-count *)
+Lemma i_count_cons_I : forall l, i_count (I :: l) = 1 + i_count l.
 Proof.
   induction l.
   - simpl.
@@ -228,7 +247,7 @@ Proof.
 Qed.
 
 (* A simple auxiliary lemma: consing I increments I-count *)
-Lemma i_count_cons_I_equivalent_to_app_I: forall l, i_count (I :: l) = i_count (l ++ [I]).
+Lemma i_count_cons_I_equivalent_to_app_I : forall l, i_count (I :: l) = i_count (l ++ [I]).
 Proof.
   intros.
   rewrite i_count_app_I.
@@ -264,17 +283,17 @@ Qed.
    Rule R3 subtracts 3 I's (if it replaces III with U), and rule R4 does not affect I's.
    We state these facts as lemmas (proof details omitted and left as admit). *)
 
-Lemma rule_2_doubles_i_count: forall l, i_count (rule_2 l) = 2 * i_count l.
+Lemma rule_2_doubles_i_count : forall l, i_count (rule_2 l) = 2 * i_count l.
 Proof.
   intros.
   unfold rule_2.
-  rewrite i_count_app_plus.
+  rewrite i_count_app_plus2.
   unfold mult.
   rewrite <- plus_n_O.
   reflexivity.
 Qed.
 
-Lemma apply_R2_doubles_i_count: forall l, i_count (apply R2 l) = 2 * i_count l.
+Lemma apply_R2_doubles_i_count : forall l, i_count (apply R2 l) = 2 * i_count l.
 Proof.
   intros.
   case l.
@@ -285,17 +304,17 @@ Proof.
     reflexivity.
 Qed.
 
-Lemma rule_3_subtracts_3_from_i_count_if_large: forall l, 3 <= i_count l -> i_count (apply R3 l) = i_count l - 3.
+Lemma rule_3_subtracts_3_from_i_count_if_large : forall l, 3 <= i_count l -> i_count (apply R3 l) = i_count l - 3.
 Proof.
   admit.
 Admitted.
 
-Lemma rule_3_does_nothing_to_i_count_if_small: forall l, i_count l <= 3 -> i_count (apply R3 l) = i_count l.
+Lemma rule_3_does_nothing_to_i_count_if_small : forall l, i_count l <= 3 -> i_count (apply R3 l) = i_count l.
 Proof.
   admit.
 Admitted.
 
-Lemma rule_2_preserves_invariant: forall l, ((i_count l mod 3) =? 0) = ((i_count (apply R2 l) mod 3) =? 0).
+Lemma rule_2_preserves_invariant : forall l, ((i_count l mod 3) =? 0) = ((i_count (apply R2 l) mod 3) =? 0).
 Proof.
   intros.
   rewrite rule_2_doubles_i_count.
@@ -310,7 +329,7 @@ Proof.
       admit.
 Admitted.
 
-Lemma rule_3_preserves_invariant: forall l,
+Lemma rule_3_preserves_invariant : forall l,
   ((i_count l) mod 3 =? 0) =
   ((i_count (apply R3 l)) mod 3 =? 0).
 Proof.
@@ -360,7 +379,7 @@ Proof.
   admit.
 Admitted.
 
-Lemma rule_4_preserves_invariant: forall l,
+Lemma rule_4_preserves_invariant : forall l,
   ((i_count l) mod 3 =? 0) =
   ((i_count (apply R4 l)) mod 3 =? 0).
 Proof.
@@ -370,7 +389,7 @@ Proof.
 Admitted.
 
 (* We then conclude that every move preserves the invariant: *)
-Lemma move_preserves_invariant: forall m l,
+Lemma move_preserves_invariant : forall m l,
   ((i_count l) mod 3 =? 0) =
   ((i_count (apply m l)) mod 3 =? 0).
 Proof.
@@ -391,7 +410,7 @@ Proof.
 Qed.
 
 (* By induction on a sequence of moves, the invariant is maintained. *)
-Lemma invariant_moves: forall ms,
+Lemma invariant_moves : forall ms,
   ((i_count (fold_right apply [I] ms)) mod 3 =? 0) = false.
 Proof.
   induction ms.
