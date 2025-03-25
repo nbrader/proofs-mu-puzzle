@@ -118,8 +118,6 @@ Definition i_counter (x : MIU) :=
 
 Definition i_count_from_fold (l : list MIU) : nat := ((fun xs => fold_left plus xs O) ∘ map i_counter) l.
 
-Require Import Coq.Logic.FunctionalExtensionality.
-
 Lemma i_count_fold_equiv : i_count = i_count_from_fold.
 Proof.
   apply functional_extensionality.
@@ -213,26 +211,37 @@ Require Import MonoidHom.
 Lemma i_count_app_plus : forall l1 l2, i_count_foldMap (m_op l1 l2) = i_count_foldMap l1 + i_count_foldMap l2.
 Proof.
   intros l1 l2.
-  fold (m_op (A:=list MIU)).
-  (* Use the monoid homomorphism property *)
   pose proof (MIUFreeMonoid.foldMap_mor nat_Monoid (fun x => match x with I => 1 | U => 0 end)).
-  admit.
-  (* rewrite (@homo_preserves_op MIU nat _ _ _ _ _ nat_Monoid (fun x => match x with I => 1 | U => 0 end) H l1 l2).
-  reflexivity. *)
-Admitted.
+  rewrite homo_preserves_op.
+  reflexivity.
+Qed.
+
+Lemma i_count_foldMap_equiv : forall xs, i_count_foldMap xs = i_count xs.
+Proof.
+  intros.
+  induction xs.
+  - simpl.
+    reflexivity.
+  - intros.
+    rewrite ListFunctions.cons_append.
+    pose proof (MIUFreeMonoid.foldMap_mor nat_Monoid (fun x => match x with I => 1 | U => 0 end)).
+    replace ([a] ++ xs) with (m_op [a] xs).
+    rewrite homo_preserves_op.
+    simpl.
+    rewrite IHxs.
+    ring.
+    case a.
+    + reflexivity.
+    + reflexivity.
+Qed.
 
 (* A simple auxiliary lemma: consing I increments I-count *)
 Lemma i_count_app_plus2 : forall l1 l2, i_count (l1 ++ l2) = i_count l1 + i_count l2.
 Proof.
   intros l1 l2.
-  induction l1 as [| a l1' IHl1'].
-  - (* Base case: empty list *)
-    simpl. reflexivity.
-  - (* Inductive case *)
-    simpl. 
-    rewrite IHl1'.
-    admit.
-Admitted.
+  rewrite <- i_count_foldMap_equiv.
+  apply i_count_app_plus.
+Qed.
 
 (* A simple auxiliary lemma: consing I increments I-count *)
 Lemma i_count_cons_I : forall l, i_count (I :: l) = 1 + i_count l.
