@@ -239,16 +239,6 @@ Proof.
     reflexivity.
 Qed.
 
-Lemma rule_3_subtracts_3_from_i_count_if_large : forall l, 3 <= i_count l -> i_count (apply R3 l) = i_count l - 3.
-Proof.
-  admit.
-Admitted.
-
-Lemma rule_3_does_nothing_to_i_count_if_small : forall l, i_count l <= 3 -> i_count (apply R3 l) = i_count l.
-Proof.
-  admit.
-Admitted.
-
 Lemma rule_2_preserves_invariant : forall l, ((i_count l mod 3) =? 0) = ((i_count (apply R2 l) mod 3) =? 0).
 Proof.
   intros.
@@ -262,6 +252,15 @@ Proof.
     + case a.
       (* * simp *)
       admit.
+Admitted.
+
+Lemma rule_3_subtracts_3_or_0 : forall l, (i_count (rule_3 l) = i_count l - 3 \/ i_count (rule_3 l) = i_count l).
+Proof.
+Admitted.
+
+Lemma apply_R3_subtracts_3_or_0 : forall l, (i_count (apply R3 l) = i_count l - 3 \/ i_count (rule_3 l) = i_count l).
+Proof.
+  admit.
 Admitted.
 
 Lemma rule_3_preserves_invariant : forall l,
