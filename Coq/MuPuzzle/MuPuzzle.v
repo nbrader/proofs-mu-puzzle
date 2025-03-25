@@ -228,17 +228,6 @@ Proof.
   reflexivity.
 Qed.
 
-Lemma apply_R2_doubles_i_count : forall l, i_count (apply R2 l) = 2 * i_count l.
-Proof.
-  intros.
-  case l.
-  - reflexivity.
-  - intros.
-    unfold apply.
-    rewrite <- rule_2_doubles_i_count.
-    reflexivity.
-Qed.
-
 Lemma rule_2_preserves_invariant : forall l, ((i_count l mod 3) =? 0) = ((i_count (apply R2 l) mod 3) =? 0).
 Proof.
   intros.
@@ -256,11 +245,6 @@ Admitted.
 
 Lemma rule_3_subtracts_3_or_0 : forall l, (i_count (rule_3 l) = i_count l - 3 \/ i_count (rule_3 l) = i_count l).
 Proof.
-Admitted.
-
-Lemma apply_R3_subtracts_3_or_0 : forall l, (i_count (apply R3 l) = i_count l - 3 \/ i_count (rule_3 l) = i_count l).
-Proof.
-  admit.
 Admitted.
 
 Lemma rule_3_preserves_invariant : forall l,
@@ -344,13 +328,6 @@ Proof.
            simpl.
            reflexivity.
 Qed.
-
-Lemma apply_R4_preserves_i_count : forall l, i_count l = i_count (apply R4 l).
-Proof.
-  intros l.
-  (* Proof: Rule R4 removes UU, which does not affect the I‑count. *)
-  admit.
-Admitted.
 
 (* We then conclude that every move preserves the invariant: *)
 Lemma move_preserves_invariant : forall m l,
