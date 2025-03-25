@@ -351,16 +351,15 @@ Proof.
 Qed.
 
 (* By induction on a sequence of moves, the invariant is maintained. *)
-Lemma invariant_moves : forall ms,
-  ((i_count (fold_right apply [I] ms)) mod 3 =? 0) = false.
+Lemma invariant_moves : forall ms, ((i_count (fold_right apply [I] ms)) mod 3 =? 0) = false.
 Proof.
+  intros.
   induction ms.
   - simpl; apply initial_invariant.
-  - simpl.
-    admit.
-    (* apply move_preserves_invariant.
-    apply IHms. *)
-Admitted.
+  - replace (fold_right apply [I] (a :: ms)) with (apply a (fold_right apply [I] (ms))) by reflexivity.
+    rewrite <- (move_preserves_invariant a (fold_right apply [I] ms)).
+    apply IHms.
+Qed.
 
 (******************************************************************************)
 (* Final theorem: No solution exists *)
