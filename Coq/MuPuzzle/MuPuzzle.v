@@ -145,14 +145,11 @@ Proof.
   - intros.
     rewrite ListFunctions.cons_append.
     pose proof (MIUFreeMonoid.foldMap_mor nat_Monoid (fun x => match x with I => 1 | U => 0 end)).
-    replace ([a] ++ xs) with (m_op [a] xs).
+    replace ([a] ++ xs) with (m_op [a] xs) by (case a; reflexivity).
     rewrite homo_preserves_op.
     simpl.
     rewrite IHxs.
     ring.
-    case a.
-    + reflexivity.
-    + reflexivity.
 Qed.
 
 (* Now prove the lemma using the universal property *)
