@@ -90,9 +90,6 @@ End MIUBasis.
 
 Module MIUFreeMonoid := FreeMonoidModule MIUBasis.
 
-Compute MIUFreeMonoid.foldMap nat_Monoid (fun (x : MIU) => match x with U => 0 | I => 1 end) [I; I; I; U; I].
-
-
 (* Define a function to count I's *)
 Definition i_count (l : list MIU) : nat := 
   MIUFreeMonoid.foldMap nat_Monoid (fun x => match x with I => 1 | U => 0 end) l.
@@ -104,35 +101,6 @@ Fixpoint i_count2 (l : list MIU) : nat :=
   | _ :: t => i_count2 t
   | [] => 0
   end.
-Section FoldEquiv.
-
-Require Import Coq.Program.Basics.
-Require Import Coq.Program.Combinators.
-
-(* Count the number of I's in a string *)
-Definition i_counter (x : MIU) :=
-  match x with
-  | I  => 1
-  | _  => 0
-  end.
-
-Definition i_count_from_fold (l : list MIU) : nat := ((fun xs => fold_left plus xs O) ∘ map i_counter) l.
-
-Lemma i_count_fold_equiv : i_count = i_count_from_fold.
-Proof.
-  apply functional_extensionality.
-  intros.
-  case x.
-  - simpl.
-    reflexivity.
-  - intros.
-    unfold i_count_from_fold.
-    unfold compose.
-    simpl.
-    admit.
-Admitted.
-
-End FoldEquiv.
 
 (******************************************************************************)
 (* Invariant proofs *)
@@ -147,23 +115,6 @@ Proof.
     rewrite IHl.
     reflexivity.
 Qed.
-
-(* A simple auxiliary lemma: appending [U] does not change the I-count *)
-Lemma i_count_apps_U : forall l1 l2, i_count (l1 ++ [U] ++ l2) = i_count l1 + i_count l2.
-Proof.
-  induction l1, l2.
-  - reflexivity.
-  - reflexivity.
-  - intros.
-    simpl.
-    rewrite <- plus_n_O.
-    rewrite i_count_app_U.
-    reflexivity.
-  - admit.
-    (* rewrite <- plus_n_O.
-    rewrite i_count_app_U.
-    reflexivity. *)
-Admitted.
 
 Lemma i_count_app_I : forall l, i_count (l ++ [I]) = i_count l + 1.
 Proof.
@@ -202,8 +153,6 @@ Instance list_MIU_Semigroup : Semigroup (list MIU) := MIUFreeMonoid.FreeMonoid_S
 Instance list_MIU_Monoid : Monoid (list MIU) := MIUFreeMonoid.FreeMonoid_Monoid.
 
 Definition i_count_foldMap := (MIUFreeMonoid.foldMap nat_Monoid (fun x => match x with I => 1 | U => 0 end)).
-
-Compute i_count_foldMap [I].
 
 Require Import MonoidHom.
 
