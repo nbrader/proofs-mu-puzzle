@@ -128,26 +128,6 @@ Proof.
     reflexivity.
 Qed.
 
-(* A simple auxiliary lemma: consing I increments I-count *)
-Lemma i_count_app_comm : forall l1 l2, i_count (l1 ++ l2) = i_count (l2 ++ l1).
-Proof.
-  induction l1, l2.
-  - reflexivity.
-  - rewrite app_nil_r.
-    reflexivity.
-  - rewrite app_nil_r.
-    reflexivity.
-  - 
-    rewrite ListFunctions.cons_append.
-    rewrite <- app_assoc.
-    rewrite (ListFunctions.cons_append _ m l2).
-    rewrite <- app_assoc.
-    case a.
-    unfold i_count.
-
-    admit.
-Admitted.
-
 Instance list_MIU_Magma : Magma (list MIU) := MIUFreeMonoid.FreeMonoid_Magma.
 Instance list_MIU_Semigroup : Semigroup (list MIU) := MIUFreeMonoid.FreeMonoid_Semigroup.
 Instance list_MIU_Monoid : Monoid (list MIU) := MIUFreeMonoid.FreeMonoid_Monoid.
@@ -155,15 +135,6 @@ Instance list_MIU_Monoid : Monoid (list MIU) := MIUFreeMonoid.FreeMonoid_Monoid.
 Definition i_count_foldMap := (MIUFreeMonoid.foldMap nat_Monoid (fun x => match x with I => 1 | U => 0 end)).
 
 Require Import MonoidHom.
-
-(* Now prove the lemma using the universal property *)
-Lemma i_count_app_plus : forall l1 l2, i_count_foldMap (m_op l1 l2) = i_count_foldMap l1 + i_count_foldMap l2.
-Proof.
-  intros l1 l2.
-  pose proof (MIUFreeMonoid.foldMap_mor nat_Monoid (fun x => match x with I => 1 | U => 0 end)).
-  rewrite homo_preserves_op.
-  reflexivity.
-Qed.
 
 Lemma i_count_foldMap_equiv : forall xs, i_count_foldMap xs = i_count xs.
 Proof.
@@ -184,12 +155,21 @@ Proof.
     + reflexivity.
 Qed.
 
+(* Now prove the lemma using the universal property *)
+Lemma i_count_foldMap_plus_mor : forall l1 l2, i_count_foldMap (m_op l1 l2) = i_count_foldMap l1 + i_count_foldMap l2.
+Proof.
+  intros l1 l2.
+  pose proof (MIUFreeMonoid.foldMap_mor nat_Monoid (fun x => match x with I => 1 | U => 0 end)).
+  rewrite homo_preserves_op.
+  reflexivity.
+Qed.
+
 (* A simple auxiliary lemma: consing I increments I-count *)
-Lemma i_count_app_plus2 : forall l1 l2, i_count (l1 ++ l2) = i_count l1 + i_count l2.
+Lemma i_count_plus_mor : forall l1 l2, i_count (l1 ++ l2) = i_count l1 + i_count l2.
 Proof.
   intros l1 l2.
   rewrite <- i_count_foldMap_equiv.
-  apply i_count_app_plus.
+  apply i_count_foldMap_plus_mor.
 Qed.
 
 (* A simple auxiliary lemma: consing I increments I-count *)
@@ -245,7 +225,7 @@ Lemma rule_2_doubles_i_count : forall l, i_count (rule_2 l) = 2 * i_count l.
 Proof.
   intros.
   unfold rule_2.
-  rewrite i_count_app_plus2.
+  rewrite i_count_plus_mor.
   unfold mult.
   rewrite <- plus_n_O.
   reflexivity.
