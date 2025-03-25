@@ -243,8 +243,53 @@ Proof.
       admit.
 Admitted.
 
-Lemma rule_3_subtracts_3_or_0 : forall l, (i_count (rule_3 l) + 3 = i_count l \/ i_count (rule_3 l) = i_count l).
+(* Lemma stating that applying rule_3 either subtracts exactly 3 I's or leaves the i_count unchanged *)
+Lemma rule_3_subtracts_3_or_0 : forall l,
+    i_count (rule_3 l) = i_count l \/
+    i_count (rule_3 l) + 3 = i_count l.
 Proof.
+  induction l as [| a l'].
+  - (* Base case: l = [] *)
+    simpl. left. reflexivity.
+  - destruct l' as [| b l''].
+    + (* l = [a] *)
+      simpl. left. case a; simpl; ring.
+    + destruct l'' as [| c l'''].
+      * (* l = [a; b] *)
+        left. destruct IHl'.
+        -- case a, b; reflexivity.
+        -- case b in H; simpl in H; discriminate.
+      * (* Now l = a :: b :: c :: l''' *)
+        destruct a, b, c; simpl.
+        -- right. ring.
+        -- left. f_equal. f_equal.
+           destruct IHl'.
+           ++ admit.
+           ++ admit.
+        -- left. f_equal. f_equal.
+           destruct IHl'.
+           ++ admit.
+           ++ admit.
+        -- left. f_equal. f_equal.
+           destruct IHl'.
+           ++ admit.
+           ++ admit.
+        -- left. f_equal. f_equal.
+           destruct IHl'.
+           ++ admit.
+           ++ admit.
+        -- left. f_equal. f_equal.
+           destruct IHl'.
+           ++ admit.
+           ++ admit.
+        -- left. f_equal. f_equal.
+           destruct IHl'.
+           ++ admit.
+           ++ admit.
+        -- left. f_equal. f_equal.
+           destruct IHl'.
+           ++ admit.
+           ++ admit.
 Admitted.
 
 Lemma rule_3_preserves_invariant : forall l,
