@@ -28,11 +28,11 @@ Variant MIU :=
   | I
   | U.
 
-Variant Move :=
-  | R1
-  | R2
-  | R3
-  | R4.
+Inductive Move :=
+  | R1 : Move
+  | R2 : Move
+  | R3 : nat -> Move
+  | R4 : nat -> Move.
 
 (* Auxiliary functions for the rules *)
 
@@ -45,18 +45,16 @@ Definition rule_1 (l : list MIU) : list MIU :=
 Definition rule_2 (l : list MIU) : list MIU :=
   l ++ l.
 
-Fixpoint rule_3 (l : list MIU) : list MIU :=
-  match l with
-  | I :: I :: I :: t => U :: t         (* Replace first occurrence of III with U *)
-  | x :: t => x :: rule_3 t
-  | [] => []                          
+Definition rule_3 (n : nat) (l : list MIU) : list MIU :=
+  take_n n l ++ match drop_n n l with
+  | I :: I :: I :: t => U :: t   (* Replace occurrence of III with U *)
+  | t => t
   end.
 
-Fixpoint rule_4 (l : list MIU) : list MIU :=
-  match l with
-  | U :: U :: t => t                  (* Remove first occurrence of UU *)
-  | x :: t => x :: rule_4 t
-  | [] => []                          
+Definition rule_4 (n : nat) (l : list MIU) : list MIU :=
+  take_n n l ++ match drop_n n l with
+  | U :: U :: t => t             (* Remove occurrence of UU *)
+  | t => t
   end.
 
 (* The function apply dispatches the given move. For R1 we append a U if the last
@@ -65,8 +63,8 @@ Definition apply (m : Move) (l : list MIU) : list MIU :=
   match m with
   | R1 => rule_1 l
   | R2 => rule_2 l
-  | R3 => rule_3 l
-  | R4 => rule_4 l
+  | R3 n => rule_3 n l
+  | R4 n => rule_4 n l
   end.
 
 (* Monoid Stuff *)
@@ -244,60 +242,37 @@ Proof.
 Admitted.
 
 (* Lemma stating that applying rule_3 either subtracts exactly 3 I's or leaves the i_count unchanged *)
-Lemma rule_3_subtracts_3_or_0 : forall l,
-    i_count (rule_3 l) = i_count l \/
-    i_count (rule_3 l) + 3 = i_count l.
-Proof.
-  induction l as [| a l'].
-  - (* Base case: l = [] *)
-    simpl. left. reflexivity.
-  - destruct l' as [| b l''].
-    + (* l = [a] *)
-      simpl. left. case a; simpl; ring.
-    + destruct l'' as [| c l'''].
-      * (* l = [a; b] *)
-        left. destruct IHl'.
-        -- case a, b; reflexivity.
-        -- case b in H; simpl in H; discriminate.
-      * (* Now l = a :: b :: c :: l''' *)
-        destruct a, b, c; simpl.
-        -- right. ring.
-        -- left. f_equal. f_equal.
-           destruct IHl'.
-           ++ admit.
-           ++ admit.
-        -- left. f_equal. f_equal.
-           destruct IHl'.
-           ++ admit.
-           ++ admit.
-        -- left. f_equal. f_equal.
-           destruct IHl'.
-           ++ admit.
-           ++ admit.
-        -- left. f_equal. f_equal.
-           destruct IHl'.
-           ++ admit.
-           ++ admit.
-        -- left. f_equal. f_equal.
-           destruct IHl'.
-           ++ admit.
-           ++ admit.
-        -- left. f_equal. f_equal.
-           destruct IHl'.
-           ++ admit.
-           ++ admit.
-        -- left. f_equal. f_equal.
-           destruct IHl'.
-           ++ admit.
-           ++ admit.
-Admitted.
-
-Lemma rule_3_preserves_invariant : forall l,
-  ((i_count l) mod 3 =? 0) =
-  ((i_count (rule_3 l)) mod 3 =? 0).
+Lemma rule_3_subtracts_3_or_0 : forall (n : nat), forall l,
+    i_count (rule_3 n l) = i_count l \/
+    i_count (rule_3 n l) + 3 = i_count l.
 Proof.
   intros.
-  pose proof (rule_3_subtracts_3_or_0 l).
+  unfold rule_3.
+  induction l, n.
+  - left.
+    rewrite i_count_plus_mor.
+    simpl.
+    reflexivity.
+  - left.
+    rewrite i_count_plus_mor.
+    simpl.
+    reflexivity.
+  - right.
+    rewrite i_count_plus_mor.
+    simpl.
+    admit.
+  - right.
+    rewrite i_count_plus_mor.
+    simpl.
+    admit.
+Admitted.
+
+Lemma rule_3_preserves_invariant : forall (n : nat), forall l,
+  ((i_count l) mod 3 =? 0) =
+  ((i_count (rule_3 n l)) mod 3 =? 0).
+Proof.
+  intros.
+  pose proof (rule_3_subtracts_3_or_0 n l).
   destruct H.
   - rewrite H.
     reflexivity.
@@ -315,16 +290,17 @@ Proof.
   reflexivity.
 Qed.
 
-Lemma rule_4_preserves_i_count : forall l, i_count l = i_count (rule_4 l).
+Lemma rule_4_preserves_i_count : forall (n : nat), forall l, i_count l = i_count (rule_4 n l).
 Proof.
   (* Proof: Rule R4 removes UU, which does not affect the I‑count. *)
-  intros l.
-  induction l.
+  intros.
+  induction l, n.
+  - simpl.
+    reflexivity.
   - simpl.
     reflexivity.
   - case a.
     + simpl.
-      rewrite <- IHl.
       reflexivity.
     + case_eq l.
       * reflexivity.
@@ -339,7 +315,11 @@ Proof.
         -- intros.
            simpl.
            reflexivity.
-Qed.
+  - case a.
+    + simpl.
+      admit.
+    + admit.
+Admitted.
 
 (* We then conclude that every move preserves the invariant: *)
 Lemma move_preserves_invariant : forall m l,
@@ -350,8 +330,8 @@ Proof.
   destruct m.
   - rewrite rule_1_preserves_i_count. reflexivity.
   - rewrite rule_2_preserves_invariant. reflexivity.
-  - rewrite rule_3_preserves_invariant. reflexivity.
-  - rewrite rule_4_preserves_i_count. reflexivity.
+  - rewrite (rule_3_preserves_invariant n). reflexivity.
+  - rewrite (rule_4_preserves_i_count n). reflexivity.
 Qed.
 
 (* In our system the initial string is [M; I]. Notice that i_count [M; I] = 1,
