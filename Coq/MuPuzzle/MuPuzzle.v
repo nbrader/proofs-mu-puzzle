@@ -313,9 +313,39 @@ Proof.
   admit.
 Admitted.
 
-Lemma rule_4_preserves_invariant : forall l,
-  ((i_count l) mod 3 =? 0) =
-  ((i_count (apply R4 l)) mod 3 =? 0).
+Lemma cons_U_preserves_i_count : forall l, i_count (U :: l) = i_count l.
+Proof.
+  intros l.
+  reflexivity.
+Qed.
+
+Lemma rule_4_preserves_i_count : forall l, i_count l = i_count (rule_4 l).
+Proof.
+  (* Proof: Rule R4 removes UU, which does not affect the I‑count. *)
+  intros l.
+  induction l.
+  - simpl.
+    reflexivity.
+  - case a.
+    + simpl.
+      rewrite <- IHl.
+      reflexivity.
+    + case_eq l.
+      * reflexivity.
+      * intros.
+        case_eq m.
+        -- intros.
+           simpl.
+           rewrite H in IHl.
+           rewrite H0 in IHl.
+           simpl in IHl.
+           apply IHl.
+        -- intros.
+           simpl.
+           reflexivity.
+Qed.
+
+Lemma apply_R4_preserves_i_count : forall l, i_count l = i_count (apply R4 l).
 Proof.
   intros l.
   (* Proof: Rule R4 removes UU, which does not affect the I‑count. *)
@@ -332,7 +362,7 @@ Proof.
   - rewrite rule_1_preserves_i_count. reflexivity.
   - rewrite rule_2_preserves_invariant. reflexivity.
   - rewrite rule_3_preserves_invariant. reflexivity.
-  - rewrite rule_4_preserves_invariant. reflexivity.
+  - rewrite rule_4_preserves_i_count. reflexivity.
 Qed.
 
 (* In our system the initial string is [M; I]. Notice that i_count [M; I] = 1,
