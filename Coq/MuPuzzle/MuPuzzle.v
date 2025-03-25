@@ -299,13 +299,13 @@ Proof.
   intros.
   pose proof (rule_3_subtracts_3_or_0 l).
   destruct H.
+  - rewrite H.
+    reflexivity.
   - rewrite <- H. clear H.
     rewrite Nat.Div0.add_mod.
     rewrite Nat.Div0.mod_same.
     rewrite Nat.add_0_r.
     rewrite Nat.Div0.mod_mod.
-    reflexivity.
-  - rewrite H.
     reflexivity.
 Qed.
 
