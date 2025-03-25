@@ -228,7 +228,7 @@ Proof.
   reflexivity.
 Qed.
 
-Lemma rule_2_preserves_invariant : forall l, ((i_count l mod 3) =? 0) = ((i_count (apply R2 l) mod 3) =? 0).
+Lemma rule_2_preserves_invariant : forall l, ((i_count l mod 3) =? 0) = ((i_count (rule_2 l) mod 3) =? 0).
 Proof.
   intros.
   rewrite rule_2_doubles_i_count.
@@ -243,59 +243,26 @@ Proof.
       admit.
 Admitted.
 
-Lemma rule_3_subtracts_3_or_0 : forall l, (i_count (rule_3 l) = i_count l - 3 \/ i_count (rule_3 l) = i_count l).
+Lemma rule_3_subtracts_3_or_0 : forall l, (i_count (rule_3 l) + 3 = i_count l \/ i_count (rule_3 l) = i_count l).
 Proof.
 Admitted.
 
 Lemma rule_3_preserves_invariant : forall l,
   ((i_count l) mod 3 =? 0) =
-  ((i_count (apply R3 l)) mod 3 =? 0).
+  ((i_count (rule_3 l)) mod 3 =? 0).
 Proof.
-  (* intros l.
-  (* Proof: Replacing III by U subtracts 3 from the I‑count.
-     Since subtracting a multiple of 3 does not affect divisibility by 3, the invariant holds. *)
-  
-  assert (3 <> i_count l).
-  {
-    intro.
-    rewrite H0 in H. clear H0.
-    assert (i_count l %| i_count l = true) by apply (dvdnn (i_count l)).
-    rewrite H0 in H. clear H0.
-    discriminate.
-  }
-  
-  pose proof (le_total 3 (i_count l)).
-  
-  rewrite rule_3_subtracts_3_from_i_count_if_possible.
-  rewrite dvdn_subl.
-  apply H.
-
-  assert (3 = i_count l -> ~(3 = i_count l) -> False).
-  {
-    intros H_eq H_neq.
-    unfold not in H_neq.
-    apply H_neq in H_eq.
-    exact H_eq.
-  }
-
-  destruct H0.
-
-  apply Nat.le_antisymm in H0.
-
-  Search (_ %| _).
-  case_eq l.
-  - intros.
-    rewrite H0 in H.
-    simpl in H.
-    simpl.
-    apply H.
-  - intros.
-    rewrite H0 in H.
-    simpl in H.
-    simpl. *)
-
-  admit.
-Admitted.
+  intros.
+  pose proof (rule_3_subtracts_3_or_0 l).
+  destruct H.
+  - rewrite <- H. clear H.
+    rewrite Nat.Div0.add_mod.
+    rewrite Nat.Div0.mod_same.
+    rewrite Nat.add_0_r.
+    rewrite Nat.Div0.mod_mod.
+    reflexivity.
+  - rewrite H.
+    reflexivity.
+Qed.
 
 Lemma cons_U_preserves_i_count : forall l, i_count (U :: l) = i_count l.
 Proof.
