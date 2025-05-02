@@ -89,16 +89,7 @@ End MIUBasis.
 Module MIUFreeMonoid := FreeMonoidModule MIUBasis.
 
 (* Define a function to count I's *)
-Definition i_count (l : list MIU) : nat := 
-  MIUFreeMonoid.foldMap nat_Monoid (fun x => match x with I => 1 | U => 0 end) l.
-
-(* Count the number of I's in a string *)
-Fixpoint i_count2 (l : list MIU) : nat :=
-  match l with
-  | I :: t => 1 + i_count2 t
-  | _ :: t => i_count2 t
-  | [] => 0
-  end.
+Definition i_count (l : list MIU) : nat := MIUFreeMonoid.foldMap nat_Monoid (fun x => match x with I => 1 | U => 0 end) l.
 
 (******************************************************************************)
 (* Invariant proofs *)
@@ -130,28 +121,10 @@ Instance list_MIU_Magma : Magma (list MIU) := MIUFreeMonoid.FreeMonoid_Magma.
 Instance list_MIU_Semigroup : Semigroup (list MIU) := MIUFreeMonoid.FreeMonoid_Semigroup.
 Instance list_MIU_Monoid : Monoid (list MIU) := MIUFreeMonoid.FreeMonoid_Monoid.
 
-Definition i_count_foldMap := (MIUFreeMonoid.foldMap nat_Monoid (fun x => match x with I => 1 | U => 0 end)).
-
 Require Import MonoidHom.
 
-Lemma i_count_foldMap_equiv : forall xs, i_count_foldMap xs = i_count xs.
-Proof.
-  intros.
-  induction xs.
-  - simpl.
-    reflexivity.
-  - intros.
-    rewrite ListFunctions.cons_append.
-    pose proof (MIUFreeMonoid.foldMap_mor nat_Monoid (fun x => match x with I => 1 | U => 0 end)).
-    replace ([a] ++ xs) with (m_op [a] xs) by (case a; reflexivity).
-    rewrite homo_preserves_op.
-    simpl.
-    rewrite IHxs.
-    ring.
-Qed.
-
 (* Now prove the lemma using the universal property *)
-Lemma i_count_foldMap_plus_mor : forall l1 l2, i_count_foldMap (m_op l1 l2) = i_count_foldMap l1 + i_count_foldMap l2.
+Lemma i_count_foldMap_plus_mor : forall l1 l2, i_count (m_op l1 l2) = i_count l1 + i_count l2.
 Proof.
   intros l1 l2.
   pose proof (MIUFreeMonoid.foldMap_mor nat_Monoid (fun x => match x with I => 1 | U => 0 end)).
@@ -163,7 +136,6 @@ Qed.
 Lemma i_count_plus_mor : forall l1 l2, i_count (l1 ++ l2) = i_count l1 + i_count l2.
 Proof.
   intros l1 l2.
-  rewrite <- i_count_foldMap_equiv.
   apply i_count_foldMap_plus_mor.
 Qed.
 
