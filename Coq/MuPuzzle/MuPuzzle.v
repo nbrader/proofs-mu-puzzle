@@ -152,12 +152,33 @@ Proof.
 Qed.
 
 (* A simple auxiliary lemma: consing I increments I-count *)
+Lemma i_count_cons_U : forall l, i_count (U :: l) = i_count l.
+Proof.
+  induction l.
+  - simpl.
+    reflexivity.
+  - simpl.
+    case a.
+    reflexivity.
+    reflexivity.
+Qed.
+
+(* A simple auxiliary lemma: consing I increments I-count *)
 Lemma i_count_cons_I_equivalent_to_app_I : forall l, i_count (I :: l) = i_count (l ++ [I]).
 Proof.
   intros.
   rewrite i_count_app_I.
   rewrite i_count_cons_I.
   rewrite Nat.add_comm.
+  reflexivity.
+Qed.
+
+(* A simple auxiliary lemma: consing I increments I-count *)
+Lemma i_count_cons_U_equivalent_to_app_U : forall l, i_count (U :: l) = i_count (l ++ [U]).
+Proof.
+  intros.
+  rewrite i_count_app_U.
+  rewrite i_count_cons_U.
   reflexivity.
 Qed.
 
@@ -198,20 +219,94 @@ Proof.
   reflexivity.
 Qed.
 
+Lemma i_count_mod3_nonzero :
+  forall l n,
+    (2 * i_count l) mod 3 = S n ->
+    (i_count l) mod 3 <> 0.
+Proof.
+  intros l n H.
+  intro H0.
+  rewrite Nat.Div0.mul_mod in H.
+  rewrite H0 in H.
+  simpl in H.
+  discriminate.
+Qed.
+
+Lemma ex_iff_fwd {A : Type} {P Q : A -> Prop} :
+  (forall x, P x <-> Q x) -> (exists x, P x) -> exists x, Q x.
+Proof.
+  intros H [x Hx].
+  exists x.
+  apply H.
+  assumption.
+Qed.
+
+Lemma ex_iff_rev {A : Type} {P Q : A -> Prop} :
+  (forall x, P x <-> Q x) -> (exists x, Q x) -> exists x, P x.
+Proof.
+  intros H [x Hx].
+  exists x.
+  apply H.
+  assumption.
+Qed.
+
+Theorem ex_iff {A : Type} {P Q : A -> Prop} :
+  (forall x, P x <-> Q x) -> (exists x, P x) <-> (exists x, Q x).
+Proof.
+  intros H; split; [apply ex_iff_fwd | apply ex_iff_rev]; assumption.
+Qed.
+
+Lemma ex_comm : forall x : nat,
+  (exists z : nat, 2 * x = 3 * z) <-> (exists z : nat, 2 * x = z * 3).
+Proof.
+  intros x. split; intros [z H]; exists z; rewrite H; apply Nat.mul_comm.
+Qed.
+
+Lemma mul2_mod3_bij :
+  forall x,
+    ((2 * x) mod 3 =? 0) = (x mod 3 =? 0).
+Proof.
+  intro x.
+  case_eq (x mod 3).
+  intros.
+
+  (* Turn boolean equalities into Prop ↔: Nat.eqb_eq etc. *)
+  rewrite Nat.eqb_eq.
+  (* m mod n = 0 ↔ n | m *)
+  rewrite Nat.mod_divide.
+  - unfold Nat.divide.
+    apply ex_comm.
+    apply Nat.Div0.mod_divides.
+    rewrite Nat.Div0.mul_mod.
+    rewrite H.
+    simpl.
+    reflexivity.
+  - discriminate.
+  - intros.
+    rewrite Nat.Div0.mul_mod.
+    rewrite H.
+    admit.
+Admitted.
+
 Lemma rule_2_preserves_invariant : forall l, ((i_count l mod 3) =? 0) = ((i_count (rule_2 l) mod 3) =? 0).
 Proof.
   intros.
   rewrite rule_2_doubles_i_count.
-  rewrite <- Nat.Div0.mul_mod_idemp_l.
-  replace (2 mod 3) with 2 by reflexivity.
   replace (i_count l mod 3 =? 0) with ((2 * i_count l) mod 3 =? 0).
   - reflexivity.
   - induction l.
     + reflexivity.
     + case a.
-      (* * simp *)
-      admit.
-Admitted.
+      * rewrite i_count_cons_I_equivalent_to_app_I.
+        rewrite i_count_plus_mor.
+        replace (i_count [I]) with 1 by reflexivity.
+        apply mul2_mod3_bij.
+      * rewrite i_count_cons_U_equivalent_to_app_U.
+        rewrite i_count_plus_mor.
+        replace (i_count [U]) with 0 by reflexivity.
+        replace (i_count l + 0) with (i_count l) by ring.
+        apply IHl.
+Qed.
 
 (* Lemma stating that applying rule_3 either subtracts exactly 3 I's or leaves the i_count unchanged *)
 Lemma rule_3_subtracts_3_or_0 : forall (n : nat), forall l,
