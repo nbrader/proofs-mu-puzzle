@@ -5,6 +5,7 @@ Require Import ArithRing Ring.
 Require Import Coq.micromega.Lia.
 Require Import Coq.Arith.Plus.
 Require Import Coq.Lists.List.
+Require Import Coq.Arith.PeanoNat.
 Import ListNotations.
 
 Open Scope nat_scope.
@@ -262,6 +263,30 @@ Proof.
   intros x. split; intros [z H]; exists z; rewrite H; apply Nat.mul_comm.
 Qed.
 
+Lemma mult_mod_nonzero : forall n,
+  S n mod 3 <> 0 -> (2 * S n) mod 3 <> 0.
+Proof.
+  intros n H.
+  (* Use the fact that multiplication by 2 mod 3 is injective over nonzero mod classes *)
+  intro Contra.
+  (* Since 2 and 3 are coprime, multiplication by 2 mod 3 is injective *)
+  (* Try all possible values mod 3 *)
+  remember (S n mod 3) as r eqn:Hr.
+  destruct r as [|[|[|]]]; try discriminate H.
+  - contradiction.
+  - rewrite Nat.Div0.mul_mod in Contra.
+    rewrite <- Hr in Contra.
+    simpl in Contra.
+    discriminate.
+  - rewrite Nat.Div0.mul_mod in Contra.
+    rewrite <- Hr in Contra.
+    simpl in Contra.
+    discriminate.
+  - rewrite Nat.Div0.mul_mod in Contra.
+    rewrite <- Hr in Contra.
+    admit.
+Admitted.
+
 Lemma mul2_mod3_bij :
   forall x,
     ((2 * x) mod 3 =? 0) = (x mod 3 =? 0).
@@ -284,9 +309,20 @@ Proof.
   - discriminate.
   - intros.
     rewrite Nat.Div0.mul_mod.
-    rewrite H.
-    admit.
-Admitted.
+    simpl (S n =? 0).
+    apply Nat.eqb_neq.
+    pose proof (O_S n).
+    rewrite <- H in H0.
+    apply not_eq_sym in H0. clear H.
+    case_eq (x mod 3).
+    + intros.
+      contradiction.
+    + intros.
+      apply mult_mod_nonzero.
+      rewrite <- H.
+      rewrite Nat.Div0.mod_mod.
+      apply H0.
+Qed.
 
 Lemma rule_2_preserves_invariant : forall l, ((i_count l mod 3) =? 0) = ((i_count (rule_2 l) mod 3) =? 0).
 Proof.
