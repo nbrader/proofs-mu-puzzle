@@ -280,26 +280,16 @@ Qed.
 
 Theorem nat_prime_2 : nat_prime 2.
 Proof.
-  unfold nat_prime.
-  rewrite Z_of_nat_2.
-  apply prime_alt.
-  split.
-  - apply Z.lt_0_1.
-  - intros d H1 H2.
-    lia.
+  apply prime_alt; split; lia.
 Qed.
 
 Theorem nat_prime_3 : nat_prime 3.
 Proof.
-  unfold nat_prime.
-  rewrite Z_of_nat_3.
-  apply prime_alt.
-  split.
-  - apply Z.lt_0_1.
+  apply prime_alt; split.
+  - lia.
   - intros d H1 H2.
     assert (d = 2) by lia.
     rewrite H in H2.
-    assert (3 mod 2 = 1) by reflexivity.
     assert (3 mod 2 <> 0) by discriminate.
     apply Zdivide_mod in H2.
     contradiction.
@@ -312,16 +302,15 @@ Lemma nat_divide_to_Z_divide :
 Proof.
   intros x [k Hk].  (* destruct the Nat.divide witness *)
   exists (Z.of_nat k).
-  pose proof inj_mult.
   rewrite <- inj_mult.
-  now rewrite Hk.
+  rewrite Hk.
+  apply inj_mult.
 Qed.
 
 Lemma three_does_not_divide_two : ~ (3 | 2)%Z.
 Proof.
-  intros [k Hk].       (* Assume 3 | 2 ⇒ ∃k, 2 = 3 * k *)
-  assert (k = 0 \/ k = 1 \/ k = -1 \/ k <= -2 \/ k >= 2) by lia.
-  destruct H; subst; simpl in Hk; lia.
+  intros [k Hk].
+  lia.
 Qed.
 
 Open Scope nat_scope.
