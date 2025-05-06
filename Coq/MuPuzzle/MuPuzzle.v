@@ -263,29 +263,125 @@ Proof.
   intros x. split; intros [z H]; exists z; rewrite H; apply Nat.mul_comm.
 Qed.
 
+Require Import Coq.ZArith.Znumtheory.
+Require Import Coq.ZArith.BinInt.
+
+Definition nat_prime (n : nat) := prime (Z_of_nat n).
+
+Lemma Z_of_nat_2 : Z_of_nat 2 = 2%Z.
+Proof.
+  simpl. reflexivity.
+Qed.
+
+Lemma Z_of_nat_3 : Z_of_nat 3 = 3%Z.
+Proof.
+  simpl. reflexivity.
+Qed.
+
+Theorem nat_prime_2 : nat_prime 2.
+Proof.
+  unfold nat_prime.
+  rewrite Z_of_nat_2.
+  apply prime_alt.
+  split.
+  - apply Z.lt_0_1.
+  - intros d H1 H2.
+    lia.
+Qed.
+
+Theorem nat_prime_3 : nat_prime 3.
+Proof.
+  unfold nat_prime.
+  rewrite Z_of_nat_3.
+  apply prime_alt.
+  split.
+  - apply Z.lt_0_1.
+  - intros d H1 H2.
+    assert (d = 2) by lia.
+    rewrite H in H2.
+    assert (3 mod 2 = 1) by reflexivity.
+    assert (3 mod 2 <> 0) by discriminate.
+    apply Zdivide_mod in H2.
+    contradiction.
+Qed.
+
+Require Import Coq.ZArith.ZArith.
+
+Lemma nat_divide_to_Z_divide :
+  forall x : nat, Nat.divide 3 (2 * x) -> Z.divide (Z.of_nat 3) (Z.of_nat 2 * Z.of_nat x).
+Proof.
+  intros x [k Hk].  (* destruct the Nat.divide witness *)
+  exists (Z.of_nat k).
+  pose proof inj_mult.
+  rewrite <- inj_mult.
+  now rewrite Hk.
+Qed.
+
+Lemma three_does_not_divide_two : ~ (3 | 2)%Z.
+Proof.
+  intros [k Hk].       (* Assume 3 | 2 ⇒ ∃k, 2 = 3 * k *)
+  assert (k = 0 \/ k = 1 \/ k = -1 \/ k <= -2 \/ k >= 2) by lia.
+  destruct H; subst; simpl in Hk; lia.
+Qed.
+
+Open Scope nat_scope.
+
+Lemma helper : forall x : nat,
+  ~ (exists z : nat, x = z * 3) ->
+  ~ (exists z : nat, 2 * x = z * 3).
+Proof.
+  intros x Hx [z Hz].
+  destruct nat_prime_3.
+  (* 3 | 2 * x *)
+  assert (Nat.divide 3 (2 * x)) by (exists z; exact Hz).
+  (* suppose 3 ∤ x *)
+  assert (~ Nat.divide 3 x).
+  {
+    intros [z' Ez].
+    apply Hx.
+    exists z'.
+    exact Ez.
+  }
+  pose proof prime_mult.
+  assert ((Z.of_nat 3 | Z.of_nat 2) \/ (Z.of_nat 3 | Z.of_nat x)).
+  {
+    apply prime_mult.
+    apply nat_prime_3.
+    apply nat_divide_to_Z_divide.
+    apply H1.
+  }
+  destruct H4.
+  - pose proof three_does_not_divide_two.
+    contradiction.
+  - apply H2.
+    unfold Nat.divide.
+    unfold Z.divide in H4.
+    destruct H4.
+    exists (Z.to_nat x0).
+    lia.
+Qed.
+
+Lemma mult_by_2_preserves_mod3_nonzero x :
+  x mod 3 <> 0 -> (2 * x) mod 3 <> 0.
+Proof.
+  intros Hx.
+  rewrite Nat.mod_divide in *.
+  {
+    unfold Nat.divide in *.
+    apply helper.
+    apply Hx.
+  }
+  discriminate.
+  discriminate.
+Qed.
+
 Lemma mult_mod_nonzero : forall n,
   S n mod 3 <> 0 -> (2 * S n) mod 3 <> 0.
 Proof.
   intros n H.
-  (* Use the fact that multiplication by 2 mod 3 is injective over nonzero mod classes *)
-  intro Contra.
-  (* Since 2 and 3 are coprime, multiplication by 2 mod 3 is injective *)
-  (* Try all possible values mod 3 *)
-  remember (S n mod 3) as r eqn:Hr.
-  destruct r as [|[|[|]]]; try discriminate H.
-  - contradiction.
-  - rewrite Nat.Div0.mul_mod in Contra.
-    rewrite <- Hr in Contra.
-    simpl in Contra.
-    discriminate.
-  - rewrite Nat.Div0.mul_mod in Contra.
-    rewrite <- Hr in Contra.
-    simpl in Contra.
-    discriminate.
-  - rewrite Nat.Div0.mul_mod in Contra.
-    rewrite <- Hr in Contra.
-    admit.
-Admitted.
+  apply mult_by_2_preserves_mod3_nonzero in H.
+  exact H.
+Qed.
 
 Lemma mul2_mod3_bij :
   forall x,
