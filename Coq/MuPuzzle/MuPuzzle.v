@@ -539,8 +539,6 @@ Proof.
   reflexivity.
 Qed.
 
-Require Import Coq.Lists.List.
-
 Lemma rule_4_preserves_i_count : forall (n : nat), forall l, i_count l = i_count (rule_4 n l).
 Proof.
   intros n l.
@@ -548,10 +546,28 @@ Proof.
   case_eq (list_eqb MIU_eqb (take_n 2 (drop_n n l)) [U; U]).
   - intros.
     rewrite i_count_plus_mor.
-    admit.
+    replace (i_count (drop_n (n + 2) l)) with (0 + i_count (drop_n (n + 2) l)) by lia.
+    replace 0 with (i_count [U; U]) at 1 by reflexivity.
+    rewrite <- i_count_plus_mor.
+    replace ([U; U]) with (take_n 2 (drop_n n l)).
+    + assert (drop_n (n + 2) l = drop_n 2 (drop_n n l)).
+      {
+        rewrite drop_m_drop_n_id.
+        replace (n + 2) with (2 + n) by lia.
+        reflexivity.
+      }
+      rewrite H0. clear H0.
+      rewrite take_n_app_drop_n_id.
+      rewrite <- i_count_plus_mor.
+      rewrite take_n_app_drop_n_id.
+      reflexivity.
+    + apply list_eqb_eq in H.
+      * apply H.
+      * intros.
+        apply MIU_eqb_spec.
   - intros.
     reflexivity.
-Admitted.
+Qed.
 
 (* We then conclude that every move preserves the invariant: *)
 Lemma move_preserves_invariant : forall m l,
