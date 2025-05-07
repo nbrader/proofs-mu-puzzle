@@ -441,6 +441,36 @@ Proof.
         apply IHl.
 Qed.
 
+Lemma list_eqb_eq :
+  forall (A : Type) (eqb : A -> A -> bool),
+    (forall x y, eqb x y = true <-> x = y) ->
+    forall l1 l2,
+      list_eqb eqb l1 l2 = true <-> l1 = l2.
+Proof.
+  intros A eqb Heq.
+  induction l1 as [| x1 t1 IH]; intros [| x2 t2]; simpl.
+  - split; auto.
+  - split; intro H; discriminate.
+  - split; intro H; discriminate.
+  - rewrite Bool.andb_true_iff.
+    rewrite Heq.
+    rewrite IH.
+    split.
+    + intros [H1 H2]. subst. reflexivity.
+    + intros H. inversion H. split; auto.
+Qed.
+
+Lemma MIU_eqb_spec : forall x y : MIU, MIU_eqb x y = true <-> x = y.
+Proof.
+  intros x y.
+  split.
+  - (* -> direction *)
+    destruct x, y; simpl; try discriminate; reflexivity.
+  - (* <- direction *)
+    intros ->.
+    destruct y; simpl; reflexivity.
+Qed.
+
 (* Lemma stating that applying rule_3 either subtracts exactly 3 I's or leaves the i_count unchanged *)
 Lemma rule_3_subtracts_3_or_0 : forall (n : nat) (l : list MIU),
   i_count (rule_3 n l) = i_count l \/
@@ -465,7 +495,11 @@ Proof.
       reflexivity.
     + assert ([I; I; I] = take_n 3 (drop_n n l)).
       {
-        admit.
+        apply list_eqb_eq in H.
+        - symmetry.
+          apply H.
+        - intros.
+          apply MIU_eqb_spec.
       }
       rewrite H0. clear H0.
       assert (drop_n (n + 3) l = drop_n 3 (drop_n n l)).
@@ -480,7 +514,7 @@ Proof.
   - intros.
     left.
     reflexivity.
-Admitted.
+Qed.
 
 Lemma rule_3_preserves_invariant : forall (n : nat), forall l,
   ((i_count l) mod 3 =? 0) =
