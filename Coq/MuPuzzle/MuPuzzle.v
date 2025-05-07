@@ -29,6 +29,20 @@ Variant MIU :=
   | I
   | U.
 
+Definition MIU_eqb (a b : MIU) : bool :=
+match a, b with
+| I, I => true
+| U, U => true
+| _, _ => false
+end.
+
+Fixpoint list_eqb {A : Type} (eqb : A -> A -> bool) (l1 l2 : list A) : bool :=
+  match l1, l2 with
+  | [], [] => true
+  | x1 :: t1, x2 :: t2 => eqb x1 x2 && list_eqb eqb t1 t2
+  | _, _ => false
+  end.
+
 Inductive Move :=
   | R1 : Move
   | R2 : Move
@@ -47,16 +61,14 @@ Definition rule_2 (l : list MIU) : list MIU :=
   l ++ l.
 
 Definition rule_3 (n : nat) (l : list MIU) : list MIU :=
-  take_n n l ++ match drop_n n l with
-  | I :: I :: I :: t => U :: t   (* Replace occurrence of III with U *)
-  | t => t
-  end.
+  if list_eqb MIU_eqb (take_n 3 (drop_n n l)) [I; I; I]
+  then take_n n l ++ [U] ++ drop_n (n + 3) l
+  else l.
 
 Definition rule_4 (n : nat) (l : list MIU) : list MIU :=
-  take_n n l ++ match drop_n n l with
-  | U :: U :: t => t             (* Remove occurrence of UU *)
-  | t => t
-  end.
+  if list_eqb MIU_eqb (take_n 2 (drop_n n l)) [U; U]
+  then take_n n l ++ drop_n (n + 2) l
+  else l.
 
 (* The function apply dispatches the given move. For R1 we append a U if the last
    symbol is I; otherwise the string is unchanged. *)
@@ -429,30 +441,25 @@ Proof.
         apply IHl.
 Qed.
 
+Require Import Coq.Lists.List.
+
+Lemma take_drop_id : forall (A : Type) (n : nat) (l : list A),
+  drop_n n l = [] -> l = take_n n l.
+
 (* Lemma stating that applying rule_3 either subtracts exactly 3 I's or leaves the i_count unchanged *)
-Lemma rule_3_subtracts_3_or_0 : forall (n : nat), forall l,
-    i_count (rule_3 n l) = i_count l \/
-    i_count (rule_3 n l) + 3 = i_count l.
+Lemma rule_3_subtracts_3_or_0 : forall (n : nat) (l : list MIU),
+  i_count (rule_3 n l) = i_count l \/
+  i_count (rule_3 n l) + 3 = i_count l.
 Proof.
-  intros.
+  intros n l.
   unfold rule_3.
-  induction l, n.
-  - left.
+  case_eq (list_eqb MIU_eqb (take_n 3 (drop_n n l)) [I; I; I]).
+  - intros.
     rewrite i_count_plus_mor.
-    simpl.
-    reflexivity.
-  - left.
-    rewrite i_count_plus_mor.
-    simpl.
-    reflexivity.
-  - right.
-    rewrite i_count_plus_mor.
-    simpl.
     admit.
-  - right.
-    rewrite i_count_plus_mor.
-    simpl.
-    admit.
+  - intros.
+    left.
+    reflexivity.
 Admitted.
 
 Lemma rule_3_preserves_invariant : forall (n : nat), forall l,
@@ -478,35 +485,18 @@ Proof.
   reflexivity.
 Qed.
 
+Require Import Coq.Lists.List.
+
 Lemma rule_4_preserves_i_count : forall (n : nat), forall l, i_count l = i_count (rule_4 n l).
 Proof.
-  (* Proof: Rule R4 removes UU, which does not affect the I‑count. *)
-  intros.
-  induction l, n.
-  - simpl.
+  intros n l.
+  unfold rule_4.
+  case_eq (list_eqb MIU_eqb (take_n 2 (drop_n n l)) [U; U]).
+  - intros.
+    rewrite i_count_plus_mor.
+    admit.
+  - intros.
     reflexivity.
-  - simpl.
-    reflexivity.
-  - case a.
-    + simpl.
-      reflexivity.
-    + case_eq l.
-      * reflexivity.
-      * intros.
-        case_eq m.
-        -- intros.
-           simpl.
-           rewrite H in IHl.
-           rewrite H0 in IHl.
-           simpl in IHl.
-           apply IHl.
-        -- intros.
-           simpl.
-           reflexivity.
-  - case a.
-    + simpl.
-      admit.
-    + admit.
 Admitted.
 
 (* We then conclude that every move preserves the invariant: *)
