@@ -441,11 +441,6 @@ Proof.
         apply IHl.
 Qed.
 
-Require Import Coq.Lists.List.
-
-Lemma take_drop_id : forall (A : Type) (n : nat) (l : list A),
-  drop_n n l = [] -> l = take_n n l.
-
 (* Lemma stating that applying rule_3 either subtracts exactly 3 I's or leaves the i_count unchanged *)
 Lemma rule_3_subtracts_3_or_0 : forall (n : nat) (l : list MIU),
   i_count (rule_3 n l) = i_count l \/
