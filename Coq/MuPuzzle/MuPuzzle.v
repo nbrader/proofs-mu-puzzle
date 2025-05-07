@@ -450,8 +450,33 @@ Proof.
   unfold rule_3.
   case_eq (list_eqb MIU_eqb (take_n 3 (drop_n n l)) [I; I; I]).
   - intros.
+    right.
     rewrite i_count_plus_mor.
-    admit.
+    rewrite i_count_plus_mor.
+    simpl (i_count [U]).
+    replace (0 + i_count (drop_n (n + 3) l)) with (i_count (drop_n (n + 3) l)) by lia.
+    replace (i_count (take_n n l) + i_count (drop_n (n + 3) l) + 3) with (i_count (take_n n l) + (i_count (drop_n (n + 3) l) + 3)) by lia.
+    replace (i_count (drop_n (n + 3) l) + 3) with (3 + i_count (drop_n (n + 3) l)) by lia.
+    replace (3) with (i_count [I; I; I]) at 1 by reflexivity.
+    rewrite <- (i_count_plus_mor).
+    replace ([I; I; I] ++ drop_n (n + 3) l) with (drop_n n l).
+    + rewrite <- (i_count_plus_mor).
+      rewrite take_n_app_drop_n_id.
+      reflexivity.
+    + assert ([I; I; I] = take_n 3 (drop_n n l)).
+      {
+        admit.
+      }
+      rewrite H0. clear H0.
+      assert (drop_n (n + 3) l = drop_n 3 (drop_n n l)).
+      {
+        rewrite drop_m_drop_n_id.
+        replace (n + 3) with (3 + n) by lia.
+        reflexivity.
+      }
+      rewrite H0. clear H0.
+      rewrite take_n_app_drop_n_id.
+      reflexivity.
   - intros.
     left.
     reflexivity.
