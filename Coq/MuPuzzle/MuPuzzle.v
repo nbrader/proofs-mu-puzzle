@@ -107,6 +107,17 @@ Definition i_count (l : list MIU) : nat := MIUFreeMonoid.foldMap nat_Monoid (fun
 (******************************************************************************)
 (* Invariant proofs *)
 
+Lemma i_count_cons_U : forall l, i_count (U :: l) = i_count l.
+Proof.
+  induction l.
+  - simpl.
+    reflexivity.
+  - simpl.
+    case a.
+    reflexivity.
+    reflexivity.
+Qed.
+
 (* A simple auxiliary lemma: appending [U] does not change the I-count *)
 Lemma i_count_app_U : forall l, i_count (l ++ [U]) = i_count l.
 Proof.
@@ -154,18 +165,6 @@ Qed.
 
 (* A simple auxiliary lemma: consing I increments I-count *)
 Lemma i_count_cons_I : forall l, i_count (I :: l) = 1 + i_count l.
-Proof.
-  induction l.
-  - simpl.
-    reflexivity.
-  - simpl.
-    case a.
-    reflexivity.
-    reflexivity.
-Qed.
-
-(* A simple auxiliary lemma: consing I increments I-count *)
-Lemma i_count_cons_U : forall l, i_count (U :: l) = i_count l.
 Proof.
   induction l.
   - simpl.
@@ -531,12 +530,6 @@ Proof.
     rewrite Nat.add_0_r.
     rewrite Nat.Div0.mod_mod.
     reflexivity.
-Qed.
-
-Lemma cons_U_preserves_i_count : forall l, i_count (U :: l) = i_count l.
-Proof.
-  intros l.
-  reflexivity.
 Qed.
 
 Lemma rule_4_preserves_i_count : forall (n : nat), forall l, i_count l = i_count (rule_4 n l).
