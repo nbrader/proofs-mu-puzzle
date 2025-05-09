@@ -43,6 +43,36 @@ Fixpoint list_eqb {A : Type} (eqb : A -> A -> bool) (l1 l2 : list A) : bool :=
   | _, _ => false
   end.
 
+Lemma list_eqb_eq :
+  forall (A : Type) (eqb : A -> A -> bool),
+    (forall x y, eqb x y = true <-> x = y) ->
+    forall l1 l2,
+      list_eqb eqb l1 l2 = true <-> l1 = l2.
+Proof.
+  intros A eqb Heq.
+  induction l1 as [| x1 t1 IH]; intros [| x2 t2]; simpl.
+  - split; auto.
+  - split; intro H; discriminate.
+  - split; intro H; discriminate.
+  - rewrite Bool.andb_true_iff.
+    rewrite Heq.
+    rewrite IH.
+    split.
+    + intros [H1 H2]. subst. reflexivity.
+    + intros H. inversion H. split; auto.
+Qed.
+
+Lemma MIU_eqb_spec : forall x y : MIU, MIU_eqb x y = true <-> x = y.
+Proof.
+  intros x y.
+  split.
+  - (* -> direction *)
+    destruct x, y; simpl; try discriminate; reflexivity.
+  - (* <- direction *)
+    intros ->.
+    destruct y; simpl; reflexivity.
+Qed.
+
 Inductive Move :=
   | R1 : Move
   | R2 : Move
@@ -383,36 +413,6 @@ Proof.
         replace (i_count [U]) with 0 by reflexivity.
         replace (i_count l + 0) with (i_count l) by ring.
         apply IHl.
-Qed.
-
-Lemma list_eqb_eq :
-  forall (A : Type) (eqb : A -> A -> bool),
-    (forall x y, eqb x y = true <-> x = y) ->
-    forall l1 l2,
-      list_eqb eqb l1 l2 = true <-> l1 = l2.
-Proof.
-  intros A eqb Heq.
-  induction l1 as [| x1 t1 IH]; intros [| x2 t2]; simpl.
-  - split; auto.
-  - split; intro H; discriminate.
-  - split; intro H; discriminate.
-  - rewrite Bool.andb_true_iff.
-    rewrite Heq.
-    rewrite IH.
-    split.
-    + intros [H1 H2]. subst. reflexivity.
-    + intros H. inversion H. split; auto.
-Qed.
-
-Lemma MIU_eqb_spec : forall x y : MIU, MIU_eqb x y = true <-> x = y.
-Proof.
-  intros x y.
-  split.
-  - (* -> direction *)
-    destruct x, y; simpl; try discriminate; reflexivity.
-  - (* <- direction *)
-    intros ->.
-    destruct y; simpl; reflexivity.
 Qed.
 
 (* Lemma stating that applying rule_3 either subtracts exactly 3 I's or leaves the i_count unchanged *)
