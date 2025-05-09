@@ -175,7 +175,6 @@ Proof.
     reflexivity.
 Qed.
 
-(* A simple auxiliary lemma: consing I increments I-count *)
 Lemma i_count_cons_I_equivalent_to_app_I : forall l, i_count (I :: l) = i_count (l ++ [I]).
 Proof.
   intros.
@@ -185,7 +184,6 @@ Proof.
   reflexivity.
 Qed.
 
-(* A simple auxiliary lemma: consing I increments I-count *)
 Lemma i_count_cons_U_equivalent_to_app_U : forall l, i_count (U :: l) = i_count (l ++ [U]).
 Proof.
   intros.
