@@ -228,43 +228,6 @@ Proof.
   reflexivity.
 Qed.
 
-Lemma i_count_mod3_nonzero :
-  forall l n,
-    (2 * i_count l) mod 3 = S n ->
-    (i_count l) mod 3 <> 0.
-Proof.
-  intros l n H.
-  intro H0.
-  rewrite Nat.Div0.mul_mod in H.
-  rewrite H0 in H.
-  simpl in H.
-  discriminate.
-Qed.
-
-Lemma ex_iff_fwd {A : Type} {P Q : A -> Prop} :
-  (forall x, P x <-> Q x) -> (exists x, P x) -> exists x, Q x.
-Proof.
-  intros H [x Hx].
-  exists x.
-  apply H.
-  assumption.
-Qed.
-
-Lemma ex_iff_rev {A : Type} {P Q : A -> Prop} :
-  (forall x, P x <-> Q x) -> (exists x, Q x) -> exists x, P x.
-Proof.
-  intros H [x Hx].
-  exists x.
-  apply H.
-  assumption.
-Qed.
-
-Theorem ex_iff {A : Type} {P Q : A -> Prop} :
-  (forall x, P x <-> Q x) -> (exists x, P x) <-> (exists x, Q x).
-Proof.
-  intros H; split; [apply ex_iff_fwd | apply ex_iff_rev]; assumption.
-Qed.
-
 Lemma ex_comm : forall x : nat,
   (exists z : nat, 2 * x = 3 * z) <-> (exists z : nat, 2 * x = z * 3).
 Proof.
@@ -275,21 +238,6 @@ Require Import Coq.ZArith.Znumtheory.
 Require Import Coq.ZArith.BinInt.
 
 Definition nat_prime (n : nat) := prime (Z_of_nat n).
-
-Lemma Z_of_nat_2 : Z_of_nat 2 = 2%Z.
-Proof.
-  simpl. reflexivity.
-Qed.
-
-Lemma Z_of_nat_3 : Z_of_nat 3 = 3%Z.
-Proof.
-  simpl. reflexivity.
-Qed.
-
-Theorem nat_prime_2 : nat_prime 2.
-Proof.
-  apply prime_alt; split; lia.
-Qed.
 
 Theorem nat_prime_3 : nat_prime 3.
 Proof.
