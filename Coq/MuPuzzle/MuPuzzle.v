@@ -542,14 +542,21 @@ Qed.
 (******************************************************************************)
 (* Final theorem: No solution exists *)
 
+Definition no_solution_exists_proof : ~ (exists ms : list Move, fold_right apply [I] ms = [U])
+  := fun H : exists ms : list Move, fold_right apply [I] ms = [U] =>
+      match H with
+        | ex_intro _ x x0 =>
+            (fun (ms : list Move) (Hms : fold_right apply [I] ms = [U]) =>
+                 let Hinv : (i_count (fold_right apply [I] ms) mod 3 =? 0) = false
+                        := invariant_moves ms
+              in let Hinv0 : (i_count [U] mod 3 =? 0) = false (* i.e "true = false" *)
+                        := eq_ind (fold_right apply [I] ms) (fun l : list MIU => (i_count l mod 3 =? 0) = false) Hinv [U] Hms
+              in let H0 : False
+                        := eq_ind true (fun e : bool => if e then True else False) Logic.I false Hinv0
+              in H0) x x0
+      end.
+
 Theorem no_solution_exists : ~ exists (ms : list Move), fold_right apply [I] ms = [U].
 Proof.
-  intro H.
-  destruct H as [ms Hms].
-  (* By the invariant, fold_right apply [M; I] ms has an I‑count not divisible by 3. *)
-  pose proof (invariant_moves ms) as Hinv.
-  rewrite Hms in Hinv.
-  (* But i_count [M; U] = i_count (M :: [U]) = 0, and 0 is divisible by 3. *)
-  simpl in Hinv.
-  discriminate.
+  exact (no_solution_exists_proof).
 Qed.
