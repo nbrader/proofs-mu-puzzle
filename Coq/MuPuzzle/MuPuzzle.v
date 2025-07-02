@@ -545,15 +545,17 @@ Qed.
 Definition no_solution_exists_proof : ~ (exists ms : list Move, fold_right apply [I] ms = [U])
   := fun H : exists ms : list Move, fold_right apply [I] ms = [U] =>
       match H with
-        | ex_intro _ x x0 =>
-            (fun (ms : list Move) (Hms : fold_right apply [I] ms = [U]) =>
-                 let Hinv : (i_count (fold_right apply [I] ms) mod 3 =? 0) = false
+        | ex_intro _ ms' property' =>
+            (fun (ms : list Move) (property : fold_right apply [I] ms = [U]) =>
+                 let invariant : (i_count (fold_right apply [I] ms) mod 3 =? 0) = false
                         := invariant_moves ms
-              in let Hinv0 : (i_count [U] mod 3 =? 0) = false (* i.e "true = false" *)
-                        := eq_ind (fold_right apply [I] ms) (fun l : list MIU => (i_count l mod 3 =? 0) = false) Hinv [U] Hms
-              in let H0 : False
-                        := eq_ind true (fun e : bool => if e then True else False) Logic.I false Hinv0
-              in H0) x x0
+              in let assumed : (i_count [U] mod 3 =? 0) = false
+                        := eq_ind (fold_right apply [I] ms) (fun l : list MIU => (i_count l mod 3 =? 0) = false) invariant [U] property
+              in let absurd_eq : true = false
+                        := assumed
+              in let absurd : False
+                        := eq_ind true (fun e : bool => if e then True else False) Logic.I false absurd_eq
+              in absurd) ms' property'
       end.
 
 Theorem no_solution_exists : ~ exists (ms : list Move), fold_right apply [I] ms = [U].
