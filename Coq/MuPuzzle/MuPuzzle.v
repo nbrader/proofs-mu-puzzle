@@ -337,12 +337,12 @@ Proof.
     rewrite H.
     reflexivity.
   - intros.
-    rewrite Nat.Div0.mul_mod.
     simpl (S n =? 0).
+    rewrite Nat.Div0.mul_mod.
     apply Nat.eqb_neq.
     pose proof (O_S n).
-    rewrite <- H in H0.
-    apply not_eq_sym in H0. clear H.
+    rewrite <- H in H0. clear H.
+    apply not_eq_sym in H0.
     case_eq (x mod 3).
     + intros.
       contradiction.
