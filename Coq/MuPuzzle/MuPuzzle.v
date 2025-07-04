@@ -249,9 +249,9 @@ Qed.
 
 Open Scope nat_scope.
 
-Lemma helper : forall x : nat,
-  ~ (exists z : nat, x = z * 3) ->
-  ~ (exists z : nat, 2 * x = z * 3).
+Lemma doubling_preserves_divisibility_by_3 : forall x : nat,
+  ~ Nat.divide 3 (x) ->
+  ~ Nat.divide 3 (2 * x).
 Proof.
   intros x Hx [z Hz].
   destruct nat_prime_3.
@@ -262,6 +262,7 @@ Proof.
   {
     intros [z' Ez].
     apply Hx.
+    unfold Nat.divide.
     exists z'.
     exact Ez.
   }
@@ -288,14 +289,9 @@ Lemma mult_mod_nonzero : forall n,
   S n mod 3 <> 0 -> (2 * S n) mod 3 <> 0.
 Proof.
   intros n H.
-  rewrite Nat.mod_divide in *.
-  {
-    unfold Nat.divide in *.
-    apply helper.
-    apply H.
-  }
-  discriminate.
-  discriminate.
+  rewrite Nat.mod_divide in * by discriminate.
+  apply doubling_preserves_divisibility_by_3.
+  apply H.
 Qed.
 
 Lemma mul2_mod3_bij :
