@@ -333,17 +333,9 @@ Proof.
   case_eq (x mod 3).
   - intros.
     (* Turn boolean equalities into Prop ↔: Nat.eqb_eq etc. *)
-    rewrite Nat.eqb_eq.
-    (* m mod n = 0 ↔ n | m *)
-    rewrite Nat.mod_divide.
-    + unfold Nat.divide.
-      apply ex_comm.
-      apply Nat.Div0.mod_divides.
-      rewrite Nat.Div0.mul_mod.
-      rewrite H.
-      simpl.
-      reflexivity.
-    + discriminate.
+    rewrite Nat.Div0.mul_mod.
+    rewrite H.
+    reflexivity.
   - intros.
     rewrite Nat.Div0.mul_mod.
     simpl (S n =? 0).
