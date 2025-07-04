@@ -366,9 +366,8 @@ Lemma rule_2_preserves_invariant : forall l, ((i_count l mod 3) =? 0) = ((i_coun
 Proof.
   intros.
   rewrite rule_2_doubles_i_count.
-  replace (i_count l mod 3 =? 0) with ((2 * i_count l) mod 3 =? 0).
-  - reflexivity.
-  - induction l.
+  apply eq_sym.
+  induction l.
     + reflexivity.
     + case a.
       * rewrite i_count_cons_equivalent_to_app.
