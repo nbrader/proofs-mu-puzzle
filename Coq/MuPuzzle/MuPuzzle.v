@@ -368,17 +368,17 @@ Proof.
   rewrite rule_2_doubles_i_count.
   apply eq_sym.
   induction l.
-    + reflexivity.
-    + case a.
-      * rewrite i_count_cons_equivalent_to_app.
-        rewrite i_count_plus_mor.
-        replace (i_count [I]) with 1 by reflexivity.
-        apply mul2_mod3_bij.
-      * rewrite i_count_cons_equivalent_to_app.
-        rewrite i_count_plus_mor.
-        replace (i_count [U]) with 0 by reflexivity.
-        replace (i_count l + 0) with (i_count l) by ring.
-        apply IHl.
+  + reflexivity.
+  + case a.
+    * rewrite i_count_cons_equivalent_to_app.
+      rewrite i_count_plus_mor.
+      replace (i_count [I]) with 1 by reflexivity.
+      apply mul2_mod3_bij.
+    * rewrite i_count_cons_equivalent_to_app.
+      rewrite i_count_plus_mor.
+      replace (i_count [U]) with 0 by reflexivity.
+      replace (i_count l + 0) with (i_count l) by ring.
+      apply IHl.
 Qed.
 
 (* Lemma stating that applying rule_3 either subtracts exactly 3 I's or leaves the i_count unchanged *)
