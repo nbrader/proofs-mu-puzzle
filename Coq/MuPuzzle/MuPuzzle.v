@@ -545,8 +545,7 @@ Qed.
 Definition no_solution_exists_proof : ~ (exists ms : list Move, fold_right apply [I] ms = [U])
   := fun H : exists ms : list Move, fold_right apply [I] ms = [U] =>
       match H with
-        | ex_intro _ ms' property' =>
-            (fun (ms : list Move) (property : fold_right apply [I] ms = [U]) =>
+        | ex_intro _ ms property =>
                  let invariant : (i_count (fold_right apply [I] ms) mod 3 =? 0) = false
                         := invariant_moves ms
               in let assumed : (i_count [U] mod 3 =? 0) = false
@@ -555,7 +554,7 @@ Definition no_solution_exists_proof : ~ (exists ms : list Move, fold_right apply
                         := assumed
               in let absurd : False
                         := eq_ind true (fun e : bool => if e then True else False) Logic.I false absurd_eq
-              in absurd) ms' property'
+              in absurd
       end.
 
 Theorem no_solution_exists : ~ exists (ms : list Move), fold_right apply [I] ms = [U].
