@@ -158,20 +158,24 @@ Proof.
   apply i_count_foldMap_plus_mor.
 Qed.
 
-(* Lemma i_count_empty : i_count [] = 0.
+(*
+Lemma i_count_empty : i_count [] = 0.
 Proof.
   reflexivity.
-Qed. *)
+Qed.
+*)
 
 Lemma i_count_U : i_count [U] = 0.
 Proof.
   reflexivity.
 Qed.
 
-(* Lemma i_count_I : i_count [I] = 1.
+(*
+Lemma i_count_I : i_count [I] = 1.
 Proof.
   reflexivity.
-Qed. *)
+Qed.
+*)
 
 Lemma i_count_cons_equivalent_to_app : forall a, forall l, i_count (a :: l) = i_count (l ++ [a]).
 Proof.
