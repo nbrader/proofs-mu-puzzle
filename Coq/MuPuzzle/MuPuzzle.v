@@ -158,25 +158,6 @@ Proof.
   apply i_count_foldMap_plus_mor.
 Qed.
 
-(*
-Lemma i_count_empty : i_count [] = 0.
-Proof.
-  reflexivity.
-Qed.
-*)
-
-Lemma i_count_U : i_count [U] = 0.
-Proof.
-  reflexivity.
-Qed.
-
-(*
-Lemma i_count_I : i_count [I] = 1.
-Proof.
-  reflexivity.
-Qed.
-*)
-
 Lemma i_count_cons_equivalent_to_app : forall a, forall l, i_count (a :: l) = i_count (l ++ [a]).
 Proof.
   intros.
@@ -199,7 +180,7 @@ Proof.
     destruct (last (a :: l') U) eqn:Hl.
     + (* last symbol is I *)
       rewrite i_count_plus_mor.
-      rewrite i_count_U.
+      replace (i_count [U]) with 0 by reflexivity.
       ring.
     + (* last symbol is U *)
       reflexivity.
