@@ -137,6 +137,29 @@ Definition i_count (l : list MIU) : nat := MIUFreeMonoid.foldMap nat_Monoid (fun
 (******************************************************************************)
 (* Invariant proofs *)
 
+(* A simple auxiliary lemma: appending [U] does not change the I-count *)
+Lemma i_count_app_U : forall l, i_count (l ++ [U]) = i_count l.
+Proof.
+  induction l.
+  - simpl.
+    reflexivity.
+  - simpl.
+    rewrite IHl.
+    reflexivity.
+Qed.
+
+Lemma i_count_app_I : forall l, i_count (l ++ [I]) = i_count l + 1.
+Proof.
+  induction l.
+  - simpl.
+    reflexivity.
+  - simpl.
+    rewrite IHl.
+    case a.
+    reflexivity.
+    reflexivity.
+Qed.
+
 Instance list_MIU_Magma : Magma (list MIU) := MIUFreeMonoid.FreeMonoid_Magma.
 Instance list_MIU_Semigroup : Semigroup (list MIU) := MIUFreeMonoid.FreeMonoid_Semigroup.
 Instance list_MIU_Monoid : Monoid (list MIU) := MIUFreeMonoid.FreeMonoid_Monoid.
@@ -156,14 +179,6 @@ Lemma i_count_plus_mor : forall l1 l2, i_count (l1 ++ l2) = i_count l1 + i_count
 Proof.
   intros l1 l2.
   apply i_count_foldMap_plus_mor.
-Qed.
-
-Lemma i_count_commutative : forall l1 l2, i_count (l1 ++ l2) = i_count (l2 ++ l1).
-Proof.
-  intros l1 l2.
-  rewrite i_count_plus_mor.
-  rewrite i_count_plus_mor.
-  ring.
 Qed.
 
 Lemma i_count_cons_U : forall l, i_count (U :: l) = i_count l.
@@ -187,24 +202,6 @@ Proof.
     case a.
     reflexivity.
     reflexivity.
-Qed.
-
-(* A simple auxiliary lemma: appending [U] does not change the I-count *)
-Lemma i_count_app_U : forall l, i_count (l ++ [U]) = i_count l.
-Proof.
-  intros.
-  rewrite i_count_commutative.
-  rewrite <- cons_append.
-  apply i_count_cons_U.
-Qed.
-
-Lemma i_count_app_I : forall l, i_count (l ++ [I]) = i_count l + 1.
-Proof.
-  intros.
-  rewrite i_count_commutative.
-  rewrite <- cons_append.
-  rewrite Nat.add_comm.
-  apply i_count_cons_I.
 Qed.
 
 Lemma i_count_cons_I_equivalent_to_app_I : forall l, i_count (I :: l) = i_count (l ++ [I]).
@@ -418,12 +415,6 @@ Proof.
         apply IHl.
 Qed.
 
-Lemma i_count_U_zero : i_count [U] = 0.
-Proof.
-  unfold i_count.
-  reflexivity.
-Qed.
-
 (* Lemma stating that applying rule_3 either subtracts exactly 3 I's or leaves the i_count unchanged *)
 Lemma rule_3_subtracts_3_or_0 : forall (n : nat) (l : list MIU),
   i_count (rule_3 n l) = i_count l \/
@@ -436,7 +427,7 @@ Proof.
     right.
     rewrite i_count_plus_mor.
     rewrite i_count_plus_mor.
-    replace (i_count [U]) with (0) by apply i_count_U_zero.
+    simpl (i_count [U]).
     replace (0 + i_count (drop_n (n + 3) l)) with (i_count (drop_n (n + 3) l)) by lia.
     replace (i_count (take_n n l) + i_count (drop_n (n + 3) l) + 3) with (i_count (take_n n l) + (i_count (drop_n (n + 3) l) + 3)) by lia.
     replace (i_count (drop_n (n + 3) l) + 3) with (3 + i_count (drop_n (n + 3) l)) by lia.
@@ -554,7 +545,8 @@ Qed.
 Definition no_solution_exists_proof : ~ (exists ms : list Move, fold_right apply [I] ms = [U])
   := fun H : exists ms : list Move, fold_right apply [I] ms = [U] =>
       match H with
-        | ex_intro _ ms property =>
+        | ex_intro _ ms' property' =>
+            (fun (ms : list Move) (property : fold_right apply [I] ms = [U]) =>
                  let invariant : (i_count (fold_right apply [I] ms) mod 3 =? 0) = false
                         := invariant_moves ms
               in let assumed : (i_count [U] mod 3 =? 0) = false
@@ -563,7 +555,7 @@ Definition no_solution_exists_proof : ~ (exists ms : list Move, fold_right apply
                         := assumed
               in let absurd : False
                         := eq_ind true (fun e : bool => if e then True else False) Logic.I false absurd_eq
-              in absurd
+              in absurd) ms' property'
       end.
 
 Theorem no_solution_exists : ~ exists (ms : list Move), fold_right apply [I] ms = [U].
