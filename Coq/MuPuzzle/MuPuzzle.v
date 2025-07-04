@@ -284,26 +284,18 @@ Proof.
     lia.
 Qed.
 
-Lemma mult_by_2_preserves_mod3_nonzero x :
-  x mod 3 <> 0 -> (2 * x) mod 3 <> 0.
-Proof.
-  intros Hx.
-  rewrite Nat.mod_divide in *.
-  {
-    unfold Nat.divide in *.
-    apply helper.
-    apply Hx.
-  }
-  discriminate.
-  discriminate.
-Qed.
-
 Lemma mult_mod_nonzero : forall n,
   S n mod 3 <> 0 -> (2 * S n) mod 3 <> 0.
 Proof.
   intros n H.
-  apply mult_by_2_preserves_mod3_nonzero in H.
-  exact H.
+  rewrite Nat.mod_divide in *.
+  {
+    unfold Nat.divide in *.
+    apply helper.
+    apply H.
+  }
+  discriminate.
+  discriminate.
 Qed.
 
 Lemma mul2_mod3_bij :
