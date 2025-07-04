@@ -137,29 +137,6 @@ Definition i_count (l : list MIU) : nat := MIUFreeMonoid.foldMap nat_Monoid (fun
 (******************************************************************************)
 (* Invariant proofs *)
 
-(* A simple auxiliary lemma: appending [U] does not change the I-count *)
-Lemma i_count_app_U : forall l, i_count (l ++ [U]) = i_count l.
-Proof.
-  induction l.
-  - simpl.
-    reflexivity.
-  - simpl.
-    rewrite IHl.
-    reflexivity.
-Qed.
-
-Lemma i_count_app_I : forall l, i_count (l ++ [I]) = i_count l + 1.
-Proof.
-  induction l.
-  - simpl.
-    reflexivity.
-  - simpl.
-    rewrite IHl.
-    case a.
-    reflexivity.
-    reflexivity.
-Qed.
-
 Instance list_MIU_Magma : Magma (list MIU) := MIUFreeMonoid.FreeMonoid_Magma.
 Instance list_MIU_Semigroup : Semigroup (list MIU) := MIUFreeMonoid.FreeMonoid_Semigroup.
 Instance list_MIU_Monoid : Monoid (list MIU) := MIUFreeMonoid.FreeMonoid_Monoid.
@@ -181,43 +158,28 @@ Proof.
   apply i_count_foldMap_plus_mor.
 Qed.
 
-Lemma i_count_cons_U : forall l, i_count (U :: l) = i_count l.
+(* Lemma i_count_empty : i_count [] = 0.
 Proof.
-  induction l.
-  - simpl.
-    reflexivity.
-  - simpl.
-    case a.
-    reflexivity.
-    reflexivity.
-Qed.
+  reflexivity.
+Qed. *)
 
-(* A simple auxiliary lemma: consing I increments I-count *)
-Lemma i_count_cons_I : forall l, i_count (I :: l) = 1 + i_count l.
+Lemma i_count_U : i_count [U] = 0.
 Proof.
-  induction l.
-  - simpl.
-    reflexivity.
-  - simpl.
-    case a.
-    reflexivity.
-    reflexivity.
-Qed.
-
-Lemma i_count_cons_I_equivalent_to_app_I : forall l, i_count (I :: l) = i_count (l ++ [I]).
-Proof.
-  intros.
-  rewrite i_count_app_I.
-  rewrite i_count_cons_I.
-  rewrite Nat.add_comm.
   reflexivity.
 Qed.
 
-Lemma i_count_cons_U_equivalent_to_app_U : forall l, i_count (U :: l) = i_count (l ++ [U]).
+(* Lemma i_count_I : i_count [I] = 1.
+Proof.
+  reflexivity.
+Qed. *)
+
+Lemma i_count_cons_equivalent_to_app : forall a, forall l, i_count (a :: l) = i_count (l ++ [a]).
 Proof.
   intros.
-  rewrite i_count_app_U.
-  rewrite i_count_cons_U.
+  rewrite cons_append.
+  rewrite i_count_plus_mor.
+  rewrite i_count_plus_mor.
+  rewrite Nat.add_comm.
   reflexivity.
 Qed.
 
@@ -232,8 +194,9 @@ Proof.
     unfold rule_1.
     destruct (last (a :: l') U) eqn:Hl.
     + (* last symbol is I *)
-      rewrite i_count_app_U.
-      reflexivity.
+      rewrite i_count_plus_mor.
+      rewrite i_count_U.
+      ring.
     + (* last symbol is U *)
       reflexivity.
 Qed.
@@ -404,11 +367,11 @@ Proof.
   - induction l.
     + reflexivity.
     + case a.
-      * rewrite i_count_cons_I_equivalent_to_app_I.
+      * rewrite i_count_cons_equivalent_to_app.
         rewrite i_count_plus_mor.
         replace (i_count [I]) with 1 by reflexivity.
         apply mul2_mod3_bij.
-      * rewrite i_count_cons_U_equivalent_to_app_U.
+      * rewrite i_count_cons_equivalent_to_app.
         rewrite i_count_plus_mor.
         replace (i_count [U]) with 0 by reflexivity.
         replace (i_count l + 0) with (i_count l) by ring.
