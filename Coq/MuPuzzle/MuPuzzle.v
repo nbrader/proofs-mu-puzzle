@@ -21,7 +21,7 @@ Require Import FreeMonoid.StructMonoid.
 (* The MIU system *)
 
 Variant MIU :=
-  (* It's trivial to see M is preserved by all rules and it complicates the rules
+  (* It's trivial to see M is preserved by all moves and it complicates the moves
     trying to account for an M not at the start.
 
     For this reason, I'm leaving the M implied as being at the start of all MIU lists.
@@ -74,40 +74,40 @@ Proof.
 Qed.
 
 Inductive Move :=
-  | R1 : Move
-  | R2 : Move
-  | R3 : nat -> Move
-  | R4 : nat -> Move.
+  | M1 : Move
+  | M2 : Move
+  | M3 : nat -> Move
+  | M4 : nat -> Move.
 
-(* Auxiliary functions for the rules *)
+(* Auxiliary functions for the moves *)
 
-Definition rule_1 (l : list MIU) : list MIU :=
+Definition move_1 (l : list MIU) : list MIU :=
   match last l U with
   | I => l ++ [U]
   | _ => l
   end.
 
-Definition rule_2 (l : list MIU) : list MIU :=
+Definition move_2 (l : list MIU) : list MIU :=
   l ++ l.
 
-Definition rule_3 (n : nat) (l : list MIU) : list MIU :=
+Definition move_3 (n : nat) (l : list MIU) : list MIU :=
   if list_eqb MIU_eqb (take_n 3 (drop_n n l)) [I; I; I]
   then take_n n l ++ [U] ++ drop_n (n + 3) l
   else l.
 
-Definition rule_4 (n : nat) (l : list MIU) : list MIU :=
+Definition move_4 (n : nat) (l : list MIU) : list MIU :=
   if list_eqb MIU_eqb (take_n 2 (drop_n n l)) [U; U]
   then take_n n l ++ drop_n (n + 2) l
   else l.
 
-(* The function apply dispatches the given move. For R1 we append a U if the last
+(* The function apply dispatches the given move. For M1 we append a U if the last
    symbol is I; otherwise the string is unchanged. *)
 Definition apply (m : Move) (l : list MIU) : list MIU :=
   match m with
-  | R1 => rule_1 l
-  | R2 => rule_2 l
-  | R3 n => rule_3 n l
-  | R4 n => rule_4 n l
+  | M1 => move_1 l
+  | M2 => move_2 l
+  | M3 n => move_3 n l
+  | M4 n => move_4 n l
   end.
 
 (* Monoid Stuff *)
@@ -168,15 +168,15 @@ Proof.
   reflexivity.
 Qed.
 
-(* Rule R1 simply adds a U at the end when the last symbol is I, so it preserves i_count. *)
-Theorem rule_1_preserves_i_count : forall (l : list MIU), i_count (apply R1 l) = i_count l.
+(* Rule M1 simply adds a U at the end when the last symbol is I, so it preserves i_count. *)
+Theorem move_1_preserves_i_count : forall (l : list MIU), i_count (apply M1 l) = i_count l.
 Proof.
   intros l.
   destruct l as [|a l'].
   - simpl.
     reflexivity.
   - unfold apply.
-    unfold rule_1.
+    unfold move_1.
     destruct (last (a :: l') U) eqn:Hl.
     + (* last symbol is I *)
       rewrite i_count_plus_mor.
@@ -188,18 +188,18 @@ Qed.
 
 (* The standard MIU invariant is that in any derivable string the number of I's is not divisible by 3.
    In symbols, starting from [M; I] we always have ~(3 %| i_count s).
-   For rule R2, one shows that if l = prefix ++ suffix with prefix ending in M,
-   then i_count l = i_count suffix (since i_count prefix = 0) and rule R2 yields
+   For move M2, one shows that if l = prefix ++ suffix with prefix ending in M,
+   then i_count l = i_count suffix (since i_count prefix = 0) and move M2 yields
    prefix ++ suffix ++ suffix, i.e. 2*(i_count suffix). Since 2 is invertible mod 3,
    3 ∤ i_count l  implies 3 ∤ (2 * i_count l).
    
-   Rule R3 subtracts 3 I's (if it replaces III with U), and rule R4 does not affect I's.
+   Rule M3 subtracts 3 I's (if it replaces III with U), and move M4 does not affect I's.
    We state these facts as lemmas (proof details omitted and left as admit). *)
 
-Lemma rule_2_doubles_i_count : forall l, i_count (rule_2 l) = 2 * i_count l.
+Lemma move_2_doubles_i_count : forall l, i_count (move_2 l) = 2 * i_count l.
 Proof.
   intros.
-  unfold rule_2.
+  unfold move_2.
   rewrite i_count_plus_mor.
   unfold mult.
   rewrite <- plus_n_O.
@@ -322,10 +322,10 @@ Proof.
       apply H0.
 Qed.
 
-Lemma rule_2_preserves_3_divisibility : forall l, ((i_count l mod 3) =? 0) = ((i_count (rule_2 l) mod 3) =? 0).
+Lemma move_2_preserves_3_divisibility : forall l, ((i_count l mod 3) =? 0) = ((i_count (move_2 l) mod 3) =? 0).
 Proof.
   intros.
-  rewrite rule_2_doubles_i_count.
+  rewrite move_2_doubles_i_count.
   apply eq_sym.
   induction l.
   + reflexivity.
@@ -341,13 +341,13 @@ Proof.
       apply IHl.
 Qed.
 
-(* Lemma stating that applying rule_3 either subtracts exactly 3 I's or leaves the i_count unchanged *)
-Lemma rule_3_subtracts_3_or_0 : forall (n : nat) (l : list MIU),
-  i_count (rule_3 n l) = i_count l \/
-  i_count (rule_3 n l) + 3 = i_count l.
+(* Lemma stating that applying move_3 either subtracts exactly 3 I's or leaves the i_count unchanged *)
+Lemma move_3_subtracts_3_or_0 : forall (n : nat) (l : list MIU),
+  i_count (move_3 n l) = i_count l \/
+  i_count (move_3 n l) + 3 = i_count l.
 Proof.
   intros n l.
-  unfold rule_3.
+  unfold move_3.
   case_eq (list_eqb MIU_eqb (take_n 3 (drop_n n l)) [I; I; I]).
   - intros.
     right.
@@ -386,12 +386,12 @@ Proof.
     reflexivity.
 Qed.
 
-Lemma rule_3_preserves_3_divisibility : forall (n : nat), forall l,
+Lemma move_3_preserves_3_divisibility : forall (n : nat), forall l,
   ((i_count l) mod 3 =? 0) =
-  ((i_count (rule_3 n l)) mod 3 =? 0).
+  ((i_count (move_3 n l)) mod 3 =? 0).
 Proof.
   intros.
-  pose proof (rule_3_subtracts_3_or_0 n l).
+  pose proof (move_3_subtracts_3_or_0 n l).
   destruct H.
   - rewrite H.
     reflexivity.
@@ -403,10 +403,10 @@ Proof.
     reflexivity.
 Qed.
 
-Lemma rule_4_preserves_i_count : forall (n : nat), forall l, i_count l = i_count (rule_4 n l).
+Lemma move_4_preserves_i_count : forall (n : nat), forall l, i_count l = i_count (move_4 n l).
 Proof.
   intros n l.
-  unfold rule_4.
+  unfold move_4.
   case_eq (list_eqb MIU_eqb (take_n 2 (drop_n n l)) [U; U]).
   - intros.
     rewrite i_count_plus_mor.
@@ -433,26 +433,30 @@ Proof.
     reflexivity.
 Qed.
 
-(* We then conclude that every move preserves the invariant: *)
+(* We then conclude that every move preserves divisibility by 3: *)
 Lemma move_preserves_3_divisibility : forall m l,
   ((i_count l) mod 3 =? 0) =
   ((i_count (apply m l)) mod 3 =? 0).
 Proof.
   intros m l.
   destruct m.
-  - rewrite rule_1_preserves_i_count. reflexivity.
-  - rewrite rule_2_preserves_3_divisibility. reflexivity.
-  - rewrite (rule_3_preserves_3_divisibility n). reflexivity.
-  - rewrite (rule_4_preserves_i_count n). reflexivity.
+  - rewrite move_1_preserves_i_count. reflexivity.
+  - rewrite move_2_preserves_3_divisibility. reflexivity.
+  - rewrite (move_3_preserves_3_divisibility n). reflexivity.
+  - rewrite (move_4_preserves_i_count n). reflexivity.
 Qed.
 
-(* In particular, starting from [I] and applying any sequence of moves will result in an i_count not divisible by 3. *)
-Lemma moves_preserve_3_divisibility_from_I : forall ms, ((i_count (fold_right apply [I] ms)) mod 3 =? 0) = false.
+(* This means divisibility by 3 is an invariant when applying moves. *)
+Definition invariant : list MIU -> bool := fun l => (i_count l mod 3 =? 0).
+
+(* In particular, starting from [I] and applying any sequence of moves preserves this invariant. *)
+Lemma moves_preserve_invariant_from_I : forall ms, invariant (fold_right apply [I] ms) = false.
 Proof.
   intros.
   induction ms.
   - reflexivity.
   - replace (fold_right apply [I] (a :: ms)) with (apply a (fold_right apply [I] (ms))) by reflexivity.
+    unfold invariant.
     rewrite <- (move_preserves_3_divisibility a (fold_right apply [I] ms)).
     apply IHms.
 Qed.
@@ -460,21 +464,26 @@ Qed.
 (******************************************************************************)
 (* Final theorem: No solution exists *)
 
-Definition no_solution_exists_proof : ~ (exists ms : list Move, fold_right apply [I] ms = [U])
+Definition no_solution_exists_proof : (exists ms : list Move, fold_right apply [I] ms = [U]) -> False
   := fun H : exists ms : list Move, fold_right apply [I] ms = [U] =>
-      match H with
-        | ex_intro _ ms ms_makes_U_assumption =>
-                 let invariant_from_I : (i_count (fold_right apply [I] ms) mod 3 =? 0) = false
-                        := moves_preserve_3_divisibility_from_I ms
-              in let invariant_U_from_assumption : (i_count [U] mod 3 =? 0) = false
-                        := eq_ind (fold_right apply [I] ms) (fun l : list MIU => (i_count l mod 3 =? 0) = false) invariant_from_I [U] ms_makes_U_assumption
-              in let absurd_eq_from_assumption : true = false
-                        := invariant_U_from_assumption
-              in let absurd : False
-                        := eq_ind true (fun e : bool => if e then True else False) Logic.I false absurd_eq_from_assumption
-              in absurd
+      match H with | ex_intro _ ms ms_makes_U_assumption =>
+        (* The assumption that there exists a sequence of moves resulting in [U] implies the invariant for U is false. *)
+           let invariant_U_false_under_assumption : invariant [U] = false :=
+                  eq_ind
+                    (fold_right apply [I] ms)
+                    (fun x => invariant x = false)
+                    (moves_preserve_invariant_from_I ms)
+                    [U]
+                    ms_makes_U_assumption
+        
+        (* But the invariant for U is actually true: See how the LHS "invariant [U]" simplifies to "true" in the following. *)
+        in let absurd : true = false := invariant_U_false_under_assumption
+
+        (* From true = false we can derive a proof of False. *)
+        in eq_ind true (fun e : bool => if e then True else False) Logic.I false absurd
       end.
 
+(* We have constructed "(exists ms : list Move, fold_right apply [I] ms = [U]) -> False" and hence proven the negation of its hypothesis. *)
 Theorem no_solution_exists : ~ exists (ms : list Move), fold_right apply [I] ms = [U].
 Proof.
   exact (no_solution_exists_proof).
