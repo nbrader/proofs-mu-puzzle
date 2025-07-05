@@ -446,10 +446,11 @@ Proof.
   - rewrite (move_4_preserves_i_count n). reflexivity.
 Qed.
 
-(* This means divisibility by 3 is an invariant when applying moves. *)
+(* This means divisibility by 3 of the i_count is an invariant when applying moves. *)
 Definition invariant : list MIU -> bool := fun l => (i_count l mod 3 =? 0).
 
-(* In particular, starting from [I] and applying any sequence of moves preserves this invariant. *)
+(* In particular, the invariant (namely, whether or not the i_count is divisible by 3) has the value of "false" for [I]
+    and so also has that value for any sequence of moves applied to [I]. *)
 Lemma moves_preserve_invariant_from_I : forall ms, invariant (fold_right apply [I] ms) = false.
 Proof.
   intros.
@@ -467,7 +468,7 @@ Qed.
 Definition no_solution_exists_proof : (exists ms : list Move, fold_right apply [I] ms = [U]) -> False
   := fun H : exists ms : list Move, fold_right apply [I] ms = [U] =>
       match H with | ex_intro _ ms ms_makes_U_assumption =>
-        (* The assumption that there exists a sequence of moves resulting in [U] implies the invariant for U is false. *)
+        (* The assumption that there exists a sequence of moves resulting in [U] implies the invariant for U has a value of "false". *)
            let invariant_U_false_under_assumption : invariant [U] = false :=
                   eq_ind
                     (fold_right apply [I] ms)
@@ -476,7 +477,7 @@ Definition no_solution_exists_proof : (exists ms : list Move, fold_right apply [
                     [U]
                     ms_makes_U_assumption
         
-        (* But the invariant for U is actually true: See how the LHS "invariant [U]" simplifies to "true" in the following. *)
+        (* But the invariant for U actually has a value of "true": See how the LHS "invariant [U]" simplifies to "true" in the following. *)
         in let absurd : true = false := invariant_U_false_under_assumption
 
         (* From true = false we can derive a proof of False. *)
