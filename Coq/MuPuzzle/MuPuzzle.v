@@ -322,7 +322,7 @@ Proof.
       apply H0.
 Qed.
 
-Lemma rule_2_preserves_invariant : forall l, ((i_count l mod 3) =? 0) = ((i_count (rule_2 l) mod 3) =? 0).
+Lemma rule_2_preserves_3_divisibility : forall l, ((i_count l mod 3) =? 0) = ((i_count (rule_2 l) mod 3) =? 0).
 Proof.
   intros.
   rewrite rule_2_doubles_i_count.
@@ -386,7 +386,7 @@ Proof.
     reflexivity.
 Qed.
 
-Lemma rule_3_preserves_invariant : forall (n : nat), forall l,
+Lemma rule_3_preserves_3_divisibility : forall (n : nat), forall l,
   ((i_count l) mod 3 =? 0) =
   ((i_count (rule_3 n l)) mod 3 =? 0).
 Proof.
@@ -434,34 +434,26 @@ Proof.
 Qed.
 
 (* We then conclude that every move preserves the invariant: *)
-Lemma move_preserves_invariant : forall m l,
+Lemma move_preserves_3_divisibility : forall m l,
   ((i_count l) mod 3 =? 0) =
   ((i_count (apply m l)) mod 3 =? 0).
 Proof.
   intros m l.
   destruct m.
   - rewrite rule_1_preserves_i_count. reflexivity.
-  - rewrite rule_2_preserves_invariant. reflexivity.
-  - rewrite (rule_3_preserves_invariant n). reflexivity.
+  - rewrite rule_2_preserves_3_divisibility. reflexivity.
+  - rewrite (rule_3_preserves_3_divisibility n). reflexivity.
   - rewrite (rule_4_preserves_i_count n). reflexivity.
 Qed.
 
-(* In our system the initial string is [M; I]. Notice that i_count [M; I] = 1,
-   and 1 is not divisible by 3. *)
-Lemma initial_invariant: ((i_count [I]) mod 3 =? 0) = false.
-Proof.
-  simpl.
-  reflexivity.
-Qed.
-
-(* By induction on a sequence of moves, the invariant is maintained. *)
-Lemma invariant_moves : forall ms, ((i_count (fold_right apply [I] ms)) mod 3 =? 0) = false.
+(* In particular, starting from [I] and applying any sequence of moves will result in an i_count not divisible by 3. *)
+Lemma moves_preserve_3_divisibility_from_I : forall ms, ((i_count (fold_right apply [I] ms)) mod 3 =? 0) = false.
 Proof.
   intros.
   induction ms.
-  - simpl; apply initial_invariant.
+  - reflexivity.
   - replace (fold_right apply [I] (a :: ms)) with (apply a (fold_right apply [I] (ms))) by reflexivity.
-    rewrite <- (move_preserves_invariant a (fold_right apply [I] ms)).
+    rewrite <- (move_preserves_3_divisibility a (fold_right apply [I] ms)).
     apply IHms.
 Qed.
 
@@ -471,15 +463,15 @@ Qed.
 Definition no_solution_exists_proof : ~ (exists ms : list Move, fold_right apply [I] ms = [U])
   := fun H : exists ms : list Move, fold_right apply [I] ms = [U] =>
       match H with
-        | ex_intro _ ms property =>
-                 let invariant : (i_count (fold_right apply [I] ms) mod 3 =? 0) = false
-                        := invariant_moves ms
-              in let assumed : (i_count [U] mod 3 =? 0) = false
-                        := eq_ind (fold_right apply [I] ms) (fun l : list MIU => (i_count l mod 3 =? 0) = false) invariant [U] property
-              in let absurd_eq : true = false
-                        := assumed
+        | ex_intro _ ms ms_makes_U_assumption =>
+                 let invariant_from_I : (i_count (fold_right apply [I] ms) mod 3 =? 0) = false
+                        := moves_preserve_3_divisibility_from_I ms
+              in let invariant_U_from_assumption : (i_count [U] mod 3 =? 0) = false
+                        := eq_ind (fold_right apply [I] ms) (fun l : list MIU => (i_count l mod 3 =? 0) = false) invariant_from_I [U] ms_makes_U_assumption
+              in let absurd_eq_from_assumption : true = false
+                        := invariant_U_from_assumption
               in let absurd : False
-                        := eq_ind true (fun e : bool => if e then True else False) Logic.I false absurd_eq
+                        := eq_ind true (fun e : bool => if e then True else False) Logic.I false absurd_eq_from_assumption
               in absurd
       end.
 
