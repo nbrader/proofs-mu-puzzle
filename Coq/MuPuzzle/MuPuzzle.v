@@ -484,7 +484,7 @@ Definition no_solution_exists_proof : (exists ms : list Move, fold_right apply [
         in eq_ind true (fun e : bool => if e then True else False) Logic.I false absurd
       end.
 
-(* We have constructed "(exists ms : list Move, fold_right apply [I] ms = [U]) -> False" and hence proven the negation of its hypothesis. *)
+(* We have constructed a witness of "(exists ms : list Move, fold_right apply [I] ms = [U]) -> False" and hence proven the negation of its hypothesis. *)
 Theorem no_solution_exists : ~ exists (ms : list Move), fold_right apply [I] ms = [U].
 Proof.
   exact (no_solution_exists_proof).
